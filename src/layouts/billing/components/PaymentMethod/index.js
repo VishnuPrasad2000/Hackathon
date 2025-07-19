@@ -10,12 +10,12 @@ import { useDispatch } from "react-redux";
 import { setTools } from "store/slices/assistantSlice";
 import { useSelector } from "react-redux";
 import {
+  FormControl,
   InputLabel,
   Select,
   MenuItem,
   Checkbox,
-  ListItemText,
-  FormControl
+  ListItemText
 } from "@mui/material";
 
 function PaymentMethod(props) {
@@ -98,7 +98,15 @@ function PaymentMethod(props) {
       });
 
       const result = await response.json();
-      dispatch(setTools(result));
+
+        // Transform to key-value format
+        const formattedTools = result.map((tool, index) => ({
+          id: tool.id || index,
+          name: tool.name ?? undefined,
+          function: tool.name ? undefined : { name: tool.function?.name || "Unnamed Tool" },
+        }));
+
+    dispatch(setTools(formattedTools));
     } catch (error) {
       console.error("Error:", error);
       alert("Something went wrong.");
@@ -299,6 +307,53 @@ function PaymentMethod(props) {
     </VuiBox>
   );
 
+const renderMultiSelect = (label, name, options) => (
+  <VuiBox p="5px 20px">
+    <VuiTypography
+      variant="button"
+      color="white"
+      fontWeight="medium"
+      mb={1}
+    >
+      {label}
+    </VuiTypography>
+    <FormControl fullWidth>
+      <Select
+        multiple
+        displayEmpty
+        name={name}
+        value={formData[name] || []}
+        onChange={handleChange}
+        renderValue={(selected) => {
+          if (!selected.length) return `Select ${label}`;
+          const selectedLabels = options
+            .filter((opt) => selected.includes(opt.value))
+            .map((opt) => opt.label)
+            .join(", ");
+          return selectedLabels;
+        }}
+        sx={{
+          backgroundColor: "#fff",
+          borderRadius: "8px",
+          minHeight: "56px",
+          color: "#000",
+          ".MuiSelect-select": {
+            padding: "12px",
+          },
+        }}
+      >
+        {options.map((opt) => (
+          <MenuItem key={opt.value} value={opt.value}>
+            <Checkbox checked={(formData[name] || []).includes(opt.value)} />
+            <ListItemText primary={opt.label} />
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  </VuiBox>
+);
+
+
   return (
     <Card id="create-assistant">
       <VuiBox
@@ -357,30 +412,16 @@ function PaymentMethod(props) {
           {renderInput("End Call Message", "endCallMessage")}
         </Grid>
         <Grid item xs={12} md={4}>
-          <FormControl fullWidth>
-            <InputLabel id="tools-label">Tools</InputLabel>
-            <Select
-              labelId="tools-label"
-              multiple
-              value={formData.toolIds || []}
-              onChange={(e) =>
-                setFormData({ ...formData, toolIds: e.target.value })
-              }
-              renderValue={(selected) =>
-                tools
-                  ?.filter((tool) => selected.includes(tool.id))
-                  .map((tool) => tool.name ?? tool.function?.name)
-                  .join(", ")
-              }
-            >
-              {tools?.map((tool) => (
-                <MenuItem key={tool.id} value={tool.id}>
-                  <Checkbox checked={formData.toolIds?.includes(tool.id)} />
-                  <ListItemText primary={tool.name ?? tool.function?.name} />
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+         <Grid item xs={12} md={6}>
+          {renderMultiSelect(
+            "Tools",
+            "toolIds",
+            tools.map((tool) => ({
+              value: tool.id,
+              label: tool.name ?? tool.function?.name ?? "Unnamed Tool",
+            }))
+          )}
+        </Grid>
         </Grid>
         <Grid item xs={12}>
           <button onClick={() => setOpenModal(true)} style={{ position: 'absolute', right: 45, marginTop: 10, padding: "0px 10px 0px 10px" }}>Generate</button>
