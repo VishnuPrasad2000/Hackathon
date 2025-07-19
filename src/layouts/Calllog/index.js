@@ -4,8 +4,6 @@ import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
 import MuiTable from "@mui/material/Table";
-import Button from "@mui/material/Button";
-import { v4 as uuidv4 } from "uuid";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -14,103 +12,102 @@ import { connect } from "react-redux";
 import colors from "assets/theme/base/colors";
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+
+const API_URL = "https://api.vapi.ai/call";
+const ASSISTANT_API_URL = "https://api.vapi.ai/assistant";
+const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
 
 function CallLogIndex() {
   const [tableData, setTableData] = useState([]);
+  const [assistantMap, setAssistantMap] = useState({});
 
-useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const response = await fetch("https://api.vapi.ai/call", {
-        method: "POST",
-        headers: {
-          Authorization: "Bearer 1aabca24-158a-4c8a-988b-fbb6ff3aebab",
-          "Content-Type": "application/json",
-        },
-      });
+  useEffect(() => {
+    const fetchAssistants = async () => {
+      try {
+        const response = await fetch(ASSISTANT_API_URL, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${API_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const assistantsData = await response.json();
+        const map = {};
+        assistantsData.forEach((a) => (map[a.id] = a.name));
+        setAssistantMap(map);
+      } catch (error) {
+        console.error("Error fetching assistants:", error);
+        setAssistantMap({});
+      }
+    };
 
-      const result = await response.json();
+    fetchAssistants();
+  }, []);
 
-      const formattedData = result.map(formatCallData);
-      setTableData(formattedData);
-      console.log("formattedData:", formattedData);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("Something went wrong.");
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(API_URL, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${API_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const result = await response.json();
+        const formattedData = result.map(formatCallData);
+        setTableData(formattedData);
+      } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong.");
+      }
+    };
+
+    if (Object.keys(assistantMap).length > 0) {
+      fetchData();
     }
+  }, [assistantMap]);
+
+  const formatCallData = (data) => {
+    let duration = "-";
+    if (data.startedAt && data.endedAt) {
+      const start = new Date(data.startedAt);
+      const end = new Date(data.endedAt);
+      const durationSeconds = Math.round((end - start) / 1000);
+      duration = `${durationSeconds}s`;
+    }
+
+    const assistantName =
+      assistantMap[data.assistantId] || data.assistantId || "-";
+
+    const user = data.customer?.sipUri
+      ? data.customer.sipUri.replace(/^sip:/, "")
+      : "-";
+
+    return {
+      id: data.id,
+      assistant: assistantName,
+      user: user,
+      startedAt: data.startedAt
+        ? new Date(data.startedAt).toLocaleString()
+        : "-",
+      duration: duration,
+    };
   };
 
-  fetchData();
-}, []);
-
-const formatCallData = (data) => {
-  const start = new Date(data.startedAt);
-  const end = new Date(data.endedAt);
-  const durationSeconds = Math.round((end - start) / 1000);
-
-  return [
-    data.id,
-    data.assistantId,
-    data.phoneNumberId,
-    data.customer?.sipUri || "-",
-    data.endedReason,
-    data.analysis?.successEvaluation,
-    data.startedAt,
-    `${durationSeconds}s`,
-    `$${data.cost?.toFixed(4)}`
-  ];
-};
-
   const columns = [
-    { name: "Phone Number", accessor: "name", align: "left" },
-    { name: "Provider", accessor: "provider", align: "left" },
-    { name: "Created on", accessor: "createdOn", align: "center" },
-    { name: "Actions", accessor: "actions", align: "center" },
+    { name: "Assistant", accessor: "assistant", align: "left" },
+    { name: "User", accessor: "user", align: "left" },
+    { name: "Conversation Started At", accessor: "startedAt", align: "center" },
+    { name: "Duration", accessor: "duration", align: "center" },
+    { name: "", accessor: "arrow", align: "center" },
   ];
 
   const { grey } = colors;
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
-  const [showForm, setShowForm] = useState(false);
-  const [newEntry, setNewEntry] = useState({ name: "", provider: "" });
-
- const handleChange = (e) => {
-  const { name, value } = e.target;
-  setNewEntry((prev) => ({ ...prev, [name]: value }));
-};
-
-const handleSave = async () => {
-  const { name, provider } = newEntry;
-  if (!name || !provider) return alert("All fields are required.");
-
-  const payload = {
-    name,
-    provider,
-    sipUri: `sip:${name}@sip.vapi.ai`,
-    fallbackDestination: {
-      type: "number",
-      number: "+18596952804",
-    },
-  };
-
-  try {
-    const response = await fetch("https://api.vapi.ai/phone-numbers", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer <YOUR_TOKEN_HERE>",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const result = await response.json();
-    setShowForm(false);
-    setNewEntry({ name: "", provider: "" });
-  } catch (error) {
-    console.error(error);
-    alert("Failed to add.");
-  }
-};
 
   const renderColumns = columns.map(({ name, align }) => (
     <VuiBox
@@ -131,51 +128,80 @@ const handleSave = async () => {
     </VuiBox>
   ));
 
-  const renderRows = tableData.map((row, key) => (
-    <TableRow key={`row-${key}`}>
-      {columns.map(({ accessor, align }) => {
-        let content;
-
-        if (accessor === "actions") {
-          content = (
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={() => alert(`Edit ${row.name}`)}
-              style={{ backgroundColor: "#3f51b5", textTransform: "none" }}
-            >
-              Edit
-            </Button>
-          );
-        } else {
-          content = row[accessor];
+  const renderRows = tableData.map((row) => (
+    <TableRow
+      key={row.id}
+      hover
+      tabIndex={0}
+      style={{
+        cursor: "pointer",
+      }}
+      onClick={() => (window.location.href = `/call-log/${row.id}`)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          window.location.href = `/call-log/${row.id}`;
         }
-
-        return (
-          <VuiBox
-            key={uuidv4()}
-            component="td"
-            p={1}
-            textAlign={align}
-            borderBottom={`${borderWidth[1]} solid ${grey[700]}`}
-          >
-            <VuiTypography
-              variant="button"
-              fontWeight="regular"
-              color="text"
-              sx={{ display: "inline-block", width: "max-content" }}
-            >
-              {content}
-            </VuiTypography>
-          </VuiBox>
-        );
-      })}
+      }}
+      sx={{
+        "&:hover": {
+          backgroundColor: grey[800] || "#f5f5f5",
+        },
+      }}
+    >
+      <VuiBox
+        component="td"
+        p={1}
+        textAlign="left"
+        borderBottom={`${borderWidth[1]} solid ${grey[700]}`}
+      >
+        <VuiTypography variant="button" fontWeight="regular" color="text">
+          {row.assistant}
+        </VuiTypography>
+      </VuiBox>
+      <VuiBox
+        component="td"
+        p={1}
+        textAlign="left"
+        borderBottom={`${borderWidth[1]} solid ${grey[700]}`}
+      >
+        <VuiTypography variant="button" fontWeight="regular" color="text">
+          {row.user}
+        </VuiTypography>
+      </VuiBox>
+      <VuiBox
+        component="td"
+        p={1}
+        textAlign="center"
+        borderBottom={`${borderWidth[1]} solid ${grey[700]}`}
+      >
+        <VuiTypography variant="button" fontWeight="regular" color="text">
+          {row.startedAt}
+        </VuiTypography>
+      </VuiBox>
+      <VuiBox
+        component="td"
+        p={1}
+        textAlign="center"
+        borderBottom={`${borderWidth[1]} solid ${grey[700]}`}
+      >
+        <VuiTypography variant="button" fontWeight="regular" color="text">
+          {row.duration}
+        </VuiTypography>
+      </VuiBox>
+      <VuiBox
+        component="td"
+        p={1}
+        textAlign="center"
+        borderBottom={`${borderWidth[1]} solid ${grey[700]}`}
+      >
+        <ArrowForwardIcon color="action" />
+      </VuiBox>
     </TableRow>
   ));
 
+  // Render main layout
   return (
-    <div style={{height: "100vh"}}>
+    <div style={{ height: "100vh" }}>
       <DashboardLayout>
         <DashboardNavbar />
         <VuiBox py={3}>
@@ -185,7 +211,7 @@ const handleSave = async () => {
               justifyContent="space-between"
               alignItems="center"
               p={2}
-              pr={3} 
+              pr={3}
             >
               <VuiTypography variant="lg" color="white">
                 Call Logs
@@ -209,10 +235,8 @@ const handleSave = async () => {
   );
 }
 
-const mapStateToProps = (state) => ({
-});
-
-const mapDispatchToProps = (dispatch) => ({
-});
+const mapStateToProps = (state) => ({});
+const mapDispatchToProps = (dispatch) => ({});
 
 export default connect(mapStateToProps, mapDispatchToProps)(CallLogIndex);
+
