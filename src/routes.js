@@ -2,9 +2,8 @@
 
 // Vision UI Dashboard React layouts
 import Dashboard from "layouts/dashboard";
-import Tables from "layouts/tables";
+import PhoneNumberIndex from "layouts/Phone_Number";
 import Assistant from "layouts/billing";
-import phonenumber from "layouts/phonenumber";
 import Profile from "layouts/profile";
 import SignIn from "layouts/authentication/sign-in";
 
@@ -33,7 +32,7 @@ const routes = [
     key: "phonenumber",
     route: "/phonenumber",
     icon: <IoStatsChart size="15px" color="inherit" />,
-    component: Tables,
+    component: PhoneNumberIndex,
     noCollapse: true,
   },
   {

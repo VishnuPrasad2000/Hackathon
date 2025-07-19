@@ -23,13 +23,17 @@ import App from "App";
 
 // Vision UI Dashboard React Context Provider
 import { VisionUIControllerProvider } from "context";
+import { Provider } from "react-redux";
+import store from "store/redux/store";
 const rootElement = document.getElementById('root');
 const root = createRoot(rootElement);
 
 
 root.render(<BrowserRouter>
   <VisionUIControllerProvider>
+    <Provider store={store}>
     <App />
+    </Provider>
   </VisionUIControllerProvider>
 </BrowserRouter>)
 
