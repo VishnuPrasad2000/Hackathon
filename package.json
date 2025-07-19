@@ -26,6 +26,8 @@
 		"apexcharts": "^3.30.0",
 		"chroma-js": "2.1.2",
 		"install": "^0.13.0",
+		"primeicons": "^7.0.0",
+		"primereact": "^10.9.6",
 		"prop-types": "15.7.2",
 		"react": "^18.2.0",
 		"react-countup": "5.2.0",

@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Card from "@mui/material/Card"; // You can replace this too if needed
 import Grid from "@mui/material/Grid"; // Optional: Can replace with flexbox later
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import VuiButton from "components/VuiButton";
+import Modal from "@mui/material/Modal";
+import Box from "@mui/material/Box";
+import { useDispatch } from "react-redux";
+import { setTools } from "store/slices/assistantSlice";
+import { useSelector } from "react-redux";
+import {
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
+  ListItemText,
+  FormControl
+} from "@mui/material";
 
-function PaymentMethod() {
-  const [formData, setFormData] = useState({
+function PaymentMethod(props) {
+  const { assistant } = props;
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+  const dispatch = useDispatch();
+  const [selectedTools, setSelectedTools] = useState([])
+  const [context, setContext] = useState('')
+
+  const initialFormData = {
     name: "",
     voiceId: "",
     voiceProvider: "",
@@ -16,15 +36,74 @@ function PaymentMethod() {
     firstMessage: "",
     endCallMessage: "",
     transcriberModel: "",
-    transcriberLanguage: "en",
+    transcriberLanguage: "",
     transcriberProvider: "",
-    analysisPrompt: "",
-  });
+    toolId: ""
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  const resetValues = () => {
+    setFormData(initialFormData);
+  };
+
+  useEffect(() => {
+    if (tools) {
+      const toolName = Array.isArray(tools)
+        ? tools.find(tool => tool.id === formData.toolId)?.name || ''
+        : null;
+      if (toolName) {
+        setSelectedTools(prev => [...prev, toolName]);
+      }
+    }
+  }, [formData?.toolId])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
+  useEffect(() => {
+    fetchTools();
+  }, []);
+
+  useEffect(() => {
+    if (assistant) {
+      setIsUpdating(true);
+      setFormData({
+        name: assistant.name || "",
+        voiceId: assistant.voice?.voiceId || "",
+        voiceProvider: assistant.voice?.provider || "",
+        model: assistant.model?.model || "",
+        modelProvider: assistant.model?.provider || "",
+        messages: assistant.model?.messages?.[0]?.content || "",
+        firstMessage: assistant.firstMessage || "",
+        endCallMessage: assistant.endCallMessage || "",
+        transcriberModel: assistant.transcriber?.model || "",
+        transcriberLanguage: assistant.transcriber?.language || "en",
+        transcriberProvider: assistant.transcriber?.provider || "",
+      });
+    }
+  }, [assistant]);
+
+  const fetchTools = async () => {
+    try {
+      debugger
+      const response = await fetch("https://api.vapi.ai/tool", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+      dispatch(setTools(result));
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong.");
+    }
+  }
 
   const handleSubmit = async () => {
     const {
@@ -107,12 +186,41 @@ function PaymentMethod() {
 
       const result = await response.json();
       console.log("Assistant created:", result);
-      alert("Assistant created successfully!");
+      alert(`Assistant ${isUpdating ? 'updated' : 'created'} successfully!`);
     } catch (error) {
       console.error("Error:", error);
       alert("Something went wrong.");
     }
   };
+
+  let tools = [];
+  tools = useSelector((state) => state.assistants.tools);
+
+  const getPrompt = async () => {
+    try {
+      const response = await fetch('https://c273ff107526.ngrok-free.app/create-task-prompt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          context,
+          'tools': selectedTools
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('Prompt created:', result);
+      return result;
+    } catch (error) {
+      console.error('Error creating task prompt:', error);
+      return null;
+    }
+  }
 
   const renderInput = (label, name) => (
     <VuiBox p="5px 20px">
@@ -202,6 +310,16 @@ function PaymentMethod() {
         <VuiTypography variant="lg" fontWeight="bold" color="white">
           Create a New Assistant
         </VuiTypography>
+        <VuiButton
+          onClick={() => {
+            resetValues()
+            setIsUpdating(false);
+          }}
+          variant="contained">
+          <VuiTypography color="black" fontWeight="small">
+            Create Assistant
+          </VuiTypography>
+        </VuiButton>
       </VuiBox>
 
       <Grid container spacing={3}>
@@ -209,15 +327,15 @@ function PaymentMethod() {
           {renderInput("Name", "name")}
         </Grid>
         <Grid item xs={12} md={6}>
+          {renderSelect("Model Provider", "modelProvider", [
+            { value: "openai", label: "openai" },
+          ])}
+        </Grid>
+        <Grid item xs={12} md={6}>
           {renderSelect("Model", "model", [
             { value: "gpt-4o", label: "gpt-4o" },
             { value: "chatgpt-4o-latest", label: "chatgpt-4o-latest" },
             { value: "gpt-3.5-turbo", label: "gpt-3.5-turbo" },
-          ])}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderSelect("Model Provider", "modelProvider", [
-            { value: "openai", label: "openai" },
           ])}
         </Grid>
         <Grid item xs={12} md={6}>
@@ -232,27 +350,54 @@ function PaymentMethod() {
             { value: "azure", label: "azure" },
           ])}
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           {renderInput("First Message", "firstMessage")}
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={4}>
           {renderInput("End Call Message", "endCallMessage")}
         </Grid>
+        <Grid item xs={12} md={4}>
+          <FormControl fullWidth>
+            <InputLabel id="tools-label">Tools</InputLabel>
+            <Select
+              labelId="tools-label"
+              multiple
+              value={formData.toolIds || []}
+              onChange={(e) =>
+                setFormData({ ...formData, toolIds: e.target.value })
+              }
+              renderValue={(selected) =>
+                tools
+                  ?.filter((tool) => selected.includes(tool.id))
+                  .map((tool) => tool.name ?? tool.function?.name)
+                  .join(", ")
+              }
+            >
+              {tools?.map((tool) => (
+                <MenuItem key={tool.id} value={tool.id}>
+                  <Checkbox checked={formData.toolIds?.includes(tool.id)} />
+                  <ListItemText primary={tool.name ?? tool.function?.name} />
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
         <Grid item xs={12}>
+          <button onClick={() => setOpenModal(true)} style={{ position: 'absolute', right: 45, marginTop: 10, padding: "0px 10px 0px 10px" }}>Generate</button>
           {renderTextarea("Assistant Prompt (Messages)", "messages", 6)}
         </Grid>
         <Grid item xs={12}>
           {renderTextarea("Evaluation Prompt", "analysisPrompt", 6)}
         </Grid>
         <Grid item xs={12} md={4}>
-          {renderSelect("Transcriber Model", "transcriberModel", [
-            { value: "nova", label: "nova" },
-            { value: "nova-2", label: "nova-2" },
+          {renderSelect("Transcriber Provider", "transcriberProvider", [
+            { value: "deepgram", label: "deepgram" },
           ])}
         </Grid>
         <Grid item xs={12} md={4}>
-          {renderSelect("Transcriber Provider", "transcriberProvider", [
-            { value: "deepgram", label: "deepgram" },
+          {renderSelect("Transcriber Model", "transcriberModel", [
+            { value: "nova", label: "nova" },
+            { value: "nova-2", label: "nova-2" },
           ])}
         </Grid>
         <Grid item xs={12} md={4}>
@@ -269,9 +414,42 @@ function PaymentMethod() {
         pt="16px"
       >
         <VuiButton variant="contained" color="info" onClick={handleSubmit}>
-          CREATE
+          {isUpdating ? "Update" : "Create"}
         </VuiButton>
       </VuiBox>
+      <Modal open={openModal} onClose={() => setOpenModal(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: '60%',
+            bgcolor: "background.paper",
+            borderRadius: 2,
+            boxShadow: 24,
+            p: 4,
+          }}
+        >
+          <h2>Generate Assistant Prompt</h2>
+          <p>You can add any prompt logic here.</p>
+          <textarea
+            rows={7}
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            style={{
+              width: '100%',
+              resize: 'vertical',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+            }}
+          />
+
+          <VuiButton onClick={() => setOpenModal(false)} color={'black'}>Close</VuiButton>
+          <VuiButton onClick={() => getPrompt()} color={'black'}>Create</VuiButton>
+        </Box>
+      </Modal>
     </Card>
   );
 }
