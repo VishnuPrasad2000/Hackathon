@@ -19,7 +19,7 @@ function Billing() {
       const response = await fetch("https://api.vapi.ai/assistant", {
         method: "GET",
         headers: {
-          Authorization: "Bearer 1aabca24-158a-4c8a-988b-fbb6ff3aebab",
+          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
           "Content-Type": "application/json",
         },
       });

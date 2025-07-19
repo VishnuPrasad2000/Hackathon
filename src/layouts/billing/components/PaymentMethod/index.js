@@ -11,7 +11,6 @@ import { setTools } from "store/slices/assistantSlice";
 import { useSelector } from "react-redux";
 import {
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Checkbox,
@@ -38,7 +37,8 @@ function PaymentMethod(props) {
     transcriberModel: "",
     transcriberLanguage: "",
     transcriberProvider: "",
-    toolId: ""
+    toolIds: "",
+    serverUrl: ""
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -48,15 +48,15 @@ function PaymentMethod(props) {
   };
 
   useEffect(() => {
-    if (tools) {
-      const toolName = Array.isArray(tools)
-        ? tools.find(tool => tool.id === formData.toolId)?.name || ''
-        : null;
-      if (toolName) {
-        setSelectedTools(prev => [...prev, toolName]);
-      }
+    if (tools && formData?.toolIds) {
+      formData?.toolIds?.forEach(toolId => {
+        const toolName = tools.find(tool => tool.id === toolId)?.name;
+        if (toolName) {
+          setSelectedTools(prev => [...prev, toolName]);
+        }
+      });
     }
-  }, [formData?.toolId])
+  }, [formData])
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,13 +82,13 @@ function PaymentMethod(props) {
         transcriberModel: assistant.transcriber?.model || "",
         transcriberLanguage: assistant.transcriber?.language || "en",
         transcriberProvider: assistant.transcriber?.provider || "",
+        toolIds: assistant?.model?.toolIds || []
       });
     }
   }, [assistant]);
 
   const fetchTools = async () => {
     try {
-      debugger
       const response = await fetch("https://api.vapi.ai/tool", {
         method: "GET",
         headers: {
@@ -99,14 +99,13 @@ function PaymentMethod(props) {
 
       const result = await response.json();
 
-        // Transform to key-value format
-        const formattedTools = result.map((tool, index) => ({
-          id: tool.id || index,
-          name: tool.name ?? undefined,
-          function: tool.name ? undefined : { name: tool.function?.name || "Unnamed Tool" },
-        }));
+      const formattedTools = result.map((tool, index) => ({
+        id: tool.id || index,
+        name: tool.name ?? undefined,
+        function: tool.name ? undefined : { name: tool.function?.name || "Unnamed Tool" },
+      }));
 
-    dispatch(setTools(formattedTools));
+      dispatch(setTools(formattedTools));
     } catch (error) {
       console.error("Error:", error);
       alert("Something went wrong.");
@@ -127,6 +126,7 @@ function PaymentMethod(props) {
       transcriberLanguage,
       transcriberProvider,
       analysisPrompt,
+      toolIds
     } = formData;
 
     if (
@@ -140,7 +140,8 @@ function PaymentMethod(props) {
       !endCallMessage ||
       !transcriberModel ||
       !transcriberLanguage ||
-      !transcriberProvider
+      !transcriberProvider ||
+      !toolIds
     ) {
       alert("Please fill in all required fields.");
       return;
@@ -153,6 +154,7 @@ function PaymentMethod(props) {
         model,
         provider: modelProvider,
         messages: [{ role: "system", content: messages }],
+        toolIds
       },
       firstMessage,
       endCallMessage,
@@ -160,6 +162,9 @@ function PaymentMethod(props) {
         model: transcriberModel,
         language: transcriberLanguage,
         provider: transcriberProvider,
+      },
+      server: {
+        url: "https://c273ff107526.ngrok-free.app/vapi-webhook"
       },
       analysisPlan: {
         minMessagesThreshold: 2,
@@ -186,7 +191,7 @@ function PaymentMethod(props) {
       const response = await fetch("https://api.vapi.ai/assistant", {
         method: "POST",
         headers: {
-          Authorization: "Bearer 1aabca24-158a-4c8a-988b-fbb6ff3aebab",
+          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -200,6 +205,100 @@ function PaymentMethod(props) {
       alert("Something went wrong.");
     }
   };
+
+  const updateAssistant = async () => {
+    const {
+      name,
+      voiceId,
+      voiceProvider,
+      model,
+      modelProvider,
+      messages,
+      firstMessage,
+      endCallMessage,
+      transcriberModel,
+      transcriberLanguage,
+      transcriberProvider,
+      analysisPrompt,
+      toolIds
+    } = formData;
+
+    if (
+      !name ||
+      !voiceId ||
+      !voiceProvider ||
+      !model ||
+      !modelProvider ||
+      !messages ||
+      !firstMessage ||
+      !endCallMessage ||
+      !transcriberModel ||
+      !transcriberLanguage ||
+      !transcriberProvider ||
+      !toolIds
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    const payload = {
+      name,
+      voice: { voiceId, provider: voiceProvider },
+      model: {
+        model,
+        provider: modelProvider,
+        messages: [{ role: "system", content: messages }],
+        toolIds
+      },
+      firstMessage,
+      endCallMessage,
+      transcriber: {
+        model: transcriberModel,
+        language: transcriberLanguage,
+        provider: transcriberProvider,
+      },
+      server: {
+        url: "https://c273ff107526.ngrok-free.app/vapi-webhook"
+      },
+      analysisPlan: {
+        minMessagesThreshold: 2,
+        successEvaluationPlan: {
+          rubric: "PercentageScale",
+          messages: [
+            { content: analysisPrompt, role: "system" },
+            {
+              content:
+                "Here is the transcript of the call:\n\n{{transcript}}\n\n. Here is the ended reason of the call:\n\n{{endedReason}}\n\n",
+              role: "user",
+            },
+            {
+              content:
+                "Here was the system prompt of the call:\n\n{{systemPrompt}}\n\n",
+              role: "user",
+            },
+          ],
+        },
+      },
+    };
+
+    try {
+      const response = await fetch(`https://api.vapi.ai/assistant/${assistant.id}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      console.log("Assistant created:", result);
+      alert(`Assistant ${isUpdating ? 'updated' : 'created'} successfully!`);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong.");
+    }
+  }
 
   let tools = [];
   tools = useSelector((state) => state.assistants.tools);
@@ -222,7 +321,8 @@ function PaymentMethod(props) {
       }
 
       const result = await response.json();
-      console.log('Prompt created:', result);
+      setOpenModal(false)
+      setFormData((prev) => ({ ...prev, messages: result }));
       return result;
     } catch (error) {
       console.error('Error creating task prompt:', error);
@@ -307,51 +407,51 @@ function PaymentMethod(props) {
     </VuiBox>
   );
 
-const renderMultiSelect = (label, name, options) => (
-  <VuiBox p="5px 20px">
-    <VuiTypography
-      variant="button"
-      color="white"
-      fontWeight="medium"
-      mb={1}
-    >
-      {label}
-    </VuiTypography>
-    <FormControl fullWidth>
-      <Select
-        multiple
-        displayEmpty
-        name={name}
-        value={formData[name] || []}
-        onChange={handleChange}
-        renderValue={(selected) => {
-          if (!selected.length) return `Select ${label}`;
-          const selectedLabels = options
-            .filter((opt) => selected.includes(opt.value))
-            .map((opt) => opt.label)
-            .join(", ");
-          return selectedLabels;
-        }}
-        sx={{
-          backgroundColor: "#fff",
-          borderRadius: "8px",
-          minHeight: "56px",
-          color: "#000",
-          ".MuiSelect-select": {
-            padding: "12px",
-          },
-        }}
+  const renderMultiSelect = (label, name, options) => (
+    <VuiBox p="5px 20px">
+      <VuiTypography
+        variant="button"
+        color="white"
+        fontWeight="medium"
+        mb={1}
       >
-        {options.map((opt) => (
-          <MenuItem key={opt.value} value={opt.value}>
-            <Checkbox checked={(formData[name] || []).includes(opt.value)} />
-            <ListItemText primary={opt.label} />
-          </MenuItem>
-        ))}
-      </Select>
-    </FormControl>
-  </VuiBox>
-);
+        {label}
+      </VuiTypography>
+      <FormControl fullWidth>
+        <Select
+          multiple
+          displayEmpty
+          name={name}
+          value={formData[name] || []}
+          onChange={handleChange}
+          renderValue={(selected) => {
+            if (!selected.length) return `Select ${label}`;
+            const selectedLabels = options
+              .filter((opt) => selected.includes(opt.value))
+              .map((opt) => opt.label)
+              .join(", ");
+            return selectedLabels;
+          }}
+          sx={{
+            backgroundColor: "#fff",
+            borderRadius: "4px !important",
+            minHeight: "40px",
+            color: "#000",
+            ".MuiSelect-select": {
+              padding: "12px",
+            },
+          }}
+        >
+          {options.map((opt) => (
+            <MenuItem key={opt.value} value={opt.value}>
+              <Checkbox checked={(formData[name] || []).includes(opt.value)} />
+              <ListItemText primary={opt.label} />
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+    </VuiBox>
+  );
 
 
   return (
@@ -412,16 +512,16 @@ const renderMultiSelect = (label, name, options) => (
           {renderInput("End Call Message", "endCallMessage")}
         </Grid>
         <Grid item xs={12} md={4}>
-         <Grid item xs={12} md={6}>
-          {renderMultiSelect(
-            "Tools",
-            "toolIds",
-            tools.map((tool) => ({
-              value: tool.id,
-              label: tool.name ?? tool.function?.name ?? "Unnamed Tool",
-            }))
-          )}
-        </Grid>
+          <>
+            {renderMultiSelect(
+              "Tools",
+              "toolIds",
+              tools.map((tool) => ({
+                value: tool.id,
+                label: tool.name ?? tool.function?.name ?? "Unnamed Tool",
+              }))
+            )}
+          </>
         </Grid>
         <Grid item xs={12}>
           <button onClick={() => setOpenModal(true)} style={{ position: 'absolute', right: 45, marginTop: 10, padding: "0px 10px 0px 10px" }}>Generate</button>
@@ -454,7 +554,7 @@ const renderMultiSelect = (label, name, options) => (
         alignItems="center"
         pt="16px"
       >
-        <VuiButton variant="contained" color="info" onClick={handleSubmit}>
+        <VuiButton variant="contained" color="info" onClick={isUpdating ? updateAssistant : handleSubmit}>
           {isUpdating ? "Update" : "Create"}
         </VuiButton>
       </VuiBox>
