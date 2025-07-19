@@ -1,23 +1,67 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import Grid from "@mui/material/Grid";
-import { Card, Stack } from "@mui/material";
+import { Card } from "@mui/material";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
-import VuiProgress from "components/VuiProgress";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import linearGradient from "assets/theme/functions/linearGradient";
 import colors from "assets/theme/base/colors";
 import WelcomeMark from "layouts/Calllog/WelcomeMark";
 import Projects from "layouts/dashboard/components/Projects";
 import SatisfactionRate from "layouts/Calllog/SatisfactionRate";
-import { IoIosRocket } from "react-icons/io";
-import { IoBuild } from "react-icons/io5";
-import { IoWallet } from "react-icons/io5";
-import { FaShoppingCart } from "react-icons/fa";
 
-function callDetails() {
-  const { gradients } = colors;
-  const { cardContent } = gradients;
+
+const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
+
+function CallDetails() {
+  const { id } = useParams();
+  const [call, setCall] = useState(null);
+  const [assistantName, setAssistantName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!id) return;
+    setLoading(true);
+    fetch(`https://api.vapi.ai/call/${id}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${API_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => (res.ok ? res.json() : Promise.reject(res.statusText)))
+      .then((data) => {
+        setCall(data);
+        setLoading(false);
+        setError("");
+        // Fetch assistant name after getting the call details
+        if (data && data.assistantId) {
+          fetch("https://api.vapi.ai/assistant", {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${API_TOKEN}`,
+              "Content-Type": "application/json",
+            },
+          })
+            .then((res2) =>
+              res2.ok ? res2.json() : Promise.reject(res2.statusText)
+            )
+            .then((assistants) => {
+              const found = assistants.find((a) => a.id === data.assistantId);
+              setAssistantName(found ? found.name : data.assistantId);
+            })
+            .catch(() => setAssistantName(data.assistantId));
+        } else {
+          setAssistantName("-");
+        }
+      })
+      .catch(() => {
+        setError("Could not load call details.");
+        setLoading(false);
+      });
+  }, [id]);
 
   return (
     <DashboardLayout>
@@ -25,294 +69,179 @@ function callDetails() {
       <VuiBox py={3}>
         <VuiBox mb={3}>
           <Grid container spacing={3}>
-            <Grid item xs={12} md={12} xl={12}>
-              <Card sx={{
+            <Grid item xs={12}>
+              <Card
+                sx={{
                   padding: "17px",
                   height: "200px",
                   backgroundColor: "#205cb5ff",
                   color: "white",
                   borderRadius: "16px",
                   boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
-                }}>
+                }}
+              >
                 <VuiBox>
-                  <VuiBox>
-                    <Grid container alignItems="center">
-                      <Grid item xs={8}>
-                        <VuiBox ml={ 2 } lineHeight={1}>
+                  {loading ? (
+                    <VuiTypography color="white">
+                      Loading call details...
+                    </VuiTypography>
+                  ) : error ? (
+                    <VuiTypography color="error">{error}</VuiTypography>
+                  ) : call ? (
+                    <VuiBox>
+                      {/* Assistant Heading */}
+                      <VuiTypography
+                        color="white"
+                        variant="h5"
+                        fontWeight="bold"
+                        mb={2}
+                        textAlign="left"
+                      >
+                        Assistant - {assistantName}
+                      </VuiTypography>
+
+                      {/* First row: User and Duration */}
+                      <Grid container spacing={2} mb={1}>
+                        <Grid item xs={6}>
                           <VuiTypography
+                            color="text"
                             variant="caption"
-                            color={"white"}
-                            opacity={1}
-                            textTransform="capitalize"
+                            display="block"
+                            textAlign="left"
+                            mb={0.5}
                           >
+                            User
                           </VuiTypography>
-                          <VuiTypography variant="subtitle1" fontWeight="bold" color="white">
-                            <VuiTypography variant="button" fontWeight="bold">
-                            </VuiTypography>
+                          <VuiTypography color="white" textAlign="left">
+                            {call.customer?.sipUri?.replace(/^sip:/, "") || "-"}
                           </VuiTypography>
-                        </VuiBox>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <VuiTypography
+                            color="text"
+                            variant="caption"
+                            display="block"
+                            textAlign="left"
+                            mb={0.5}
+                          >
+                            Duration
+                          </VuiTypography>
+                          <VuiTypography color="white" textAlign="left">
+                            {call.startedAt && call.endedAt
+                              ? `${Math.round(
+                                  (new Date(call.endedAt) -
+                                    new Date(call.startedAt)) /
+                                    1000
+                                )}s`
+                              : "-"}
+                          </VuiTypography>
+                        </Grid>
                       </Grid>
-                    </Grid>
-                  </VuiBox>
+
+                      {/* Second row: Started At and Ended At */}
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <VuiTypography
+                            color="text"
+                            variant="caption"
+                            display="block"
+                            textAlign="left"
+                            mb={0.5}
+                          >
+                            Started At
+                          </VuiTypography>
+                          <VuiTypography color="white" textAlign="left">
+                            {call.startedAt
+                              ? new Date(call.startedAt).toLocaleString()
+                              : "-"}
+                          </VuiTypography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <VuiTypography
+                            color="text"
+                            variant="caption"
+                            display="block"
+                            textAlign="left"
+                            mb={0.5}
+                          >
+                            Ended At
+                          </VuiTypography>
+                          <VuiTypography color="white" textAlign="left">
+                            {call.endedAt
+                              ? new Date(call.endedAt).toLocaleString()
+                              : "-"}
+                          </VuiTypography>
+                        </Grid>
+                      </Grid>
+                    </VuiBox>
+                  ) : null}
                 </VuiBox>
               </Card>
-            </Grid>
-          </Grid>
-        </VuiBox>
-        <VuiBox mb={3}>
-          <Grid container spacing="18px">
-            <Grid item xs={12} lg={12} xl={9}>
-              <WelcomeMark />
-            </Grid>
-            <Grid item xs={12} lg={6} xl={3}>
-              <SatisfactionRate />
             </Grid>
           </Grid>
         </VuiBox>
         <VuiBox mb={3}>
           <Grid container spacing={3}>
+            <Grid item xs={12} lg={12} xl={9}>
+              <WelcomeMark messages={call?.messages} />
+            </Grid>
+            <Grid item xs={12} lg={6} xl={3}>
+              <SatisfactionRate
+                successEvaluation={call?.analysis?.successEvaluation}
+              />
+            </Grid>
+          </Grid>
+        </VuiBox>
+        {/* SAME HEIGHT GRID SECTION */}
+        <VuiBox mb={3}>
+          <Grid container spacing={3} alignItems="stretch">
             <Grid item xs={12} lg={12} xl={7}>
-              <Card>
-                <VuiBox sx={{ height: "400px" }}>
+              <Card sx={{ minHeight: 350, height: "100%" }}>
+                <VuiBox sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                   <VuiTypography
                     variant="lg"
                     color="white"
                     fontWeight="bold"
                     mb="5px"
                   >
-                   Call Summary 
+                    Call Summary
                   </VuiTypography>
-                  <VuiBox display="flex" alignItems="center" mb="40px">
-                    <VuiTypography
-                      variant="button"
-                      color="success"
-                      fontWeight="bold"
-                    >
-                      <VuiTypography
-                        variant="button"
-                        color="text"
-                        fontWeight="regular"
-                      >
-                      </VuiTypography>
-                    </VuiTypography>
-                  </VuiBox>
-                  <VuiBox sx={{ height: "310px" }}>
-                  </VuiBox>
+                  <VuiTypography color="white">
+                    {call?.summary || "-"}
+                  </VuiTypography>
+                  <VuiBox flexGrow={1} /> {/* pushes content up, fills space */}
                 </VuiBox>
               </Card>
             </Grid>
             <Grid item xs={12} lg={6} xl={5}>
-              <Card>
-                <VuiBox>
-                  <VuiBox
-                    mb="24px"
-                    height="220px"
-                    sx={{
-                      background: linearGradient(
-                        cardContent.main,
-                        cardContent.state,
-                        cardContent.deg
-                      ),
-                      borderRadius: "20px",
-                    }}
-                  >
-                  </VuiBox>
+              <Card sx={{ minHeight: 350, height: "100%" }}>
+                <VuiBox sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                   <VuiTypography
                     variant="lg"
                     color="white"
                     fontWeight="bold"
                     mb="5px"
                   >
-                    Active Users
+                    Evaluation Summary
                   </VuiTypography>
-                  <VuiBox display="flex" alignItems="center" mb="40px">
-                    <VuiTypography
-                      variant="button"
-                      color="success"
-                      fontWeight="bold"
-                    >
-                      (+23){" "}
-                      <VuiTypography
-                        variant="button"
-                        color="text"
-                        fontWeight="regular"
-                      >
-                        than last week
-                      </VuiTypography>
-                    </VuiTypography>
-                  </VuiBox>
-                  <Grid container spacing="50px">
-                    <Grid item xs={6} md={3} lg={3}>
-                      <Stack
-                        direction="row"
-                        spacing={{ sm: "10px", xl: "4px", xxl: "10px" }}
-                        mb="6px"
-                      >
-                        <VuiBox
-                          bgColor="info"
-                          display="flex"
-                          justifyContent="center"
-                          alignItems="center"
-                          sx={{
-                            borderRadius: "6px",
-                            width: "25px",
-                            height: "25px",
-                          }}
-                        >
-                          <IoWallet color="#fff" size="12px" />
-                        </VuiBox>
-                        <VuiTypography
-                          color="text"
-                          variant="button"
-                          fontWeight="medium"
-                        >
-                          Users
-                        </VuiTypography>
-                      </Stack>
-                      <VuiTypography
-                        color="white"
-                        variant="lg"
-                        fontWeight="bold"
-                        mb="8px"
-                      >
-                        32,984
-                      </VuiTypography>
-                      <VuiProgress
-                        value={60}
-                        color="info"
-                        sx={{ background: "#2D2E5F" }}
-                      />
-                    </Grid>
-                    <Grid item xs={6} md={3} lg={3}>
-                      <Stack
-                        direction="row"
-                        spacing={{ sm: "10px", xl: "4px", xxl: "10px" }}
-                        mb="6px"
-                      >
-                        <VuiBox
-                          bgColor="info"
-                          display="flex"
-                          justifyContent="center"
-                          alignItems="center"
-                          sx={{
-                            borderRadius: "6px",
-                            width: "25px",
-                            height: "25px",
-                          }}
-                        >
-                          <IoIosRocket color="#fff" size="12px" />
-                        </VuiBox>
-                        <VuiTypography
-                          color="text"
-                          variant="button"
-                          fontWeight="medium"
-                        >
-                          Clicks
-                        </VuiTypography>
-                      </Stack>
-                      <VuiTypography
-                        color="white"
-                        variant="lg"
-                        fontWeight="bold"
-                        mb="8px"
-                      >
-                        2,42M
-                      </VuiTypography>
-                      <VuiProgress
-                        value={60}
-                        color="info"
-                        sx={{ background: "#2D2E5F" }}
-                      />
-                    </Grid>
-                    <Grid item xs={6} md={3} lg={3}>
-                      <Stack
-                        direction="row"
-                        spacing={{ sm: "10px", xl: "4px", xxl: "10px" }}
-                        mb="6px"
-                      >
-                        <VuiBox
-                          bgColor="info"
-                          display="flex"
-                          justifyContent="center"
-                          alignItems="center"
-                          sx={{
-                            borderRadius: "6px",
-                            width: "25px",
-                            height: "25px",
-                          }}
-                        >
-                          <FaShoppingCart color="#fff" size="12px" />
-                        </VuiBox>
-                        <VuiTypography
-                          color="text"
-                          variant="button"
-                          fontWeight="medium"
-                        >
-                          Sales
-                        </VuiTypography>
-                      </Stack>
-                      <VuiTypography
-                        color="white"
-                        variant="lg"
-                        fontWeight="bold"
-                        mb="8px"
-                      >
-                        2,400$
-                      </VuiTypography>
-                      <VuiProgress
-                        value={60}
-                        color="info"
-                        sx={{ background: "#2D2E5F" }}
-                      />
-                    </Grid>
-                    <Grid item xs={6} md={3} lg={3}>
-                      <Stack
-                        direction="row"
-                        spacing={{ sm: "10px", xl: "4px", xxl: "10px" }}
-                        mb="6px"
-                      >
-                        <VuiBox
-                          bgColor="info"
-                          display="flex"
-                          justifyContent="center"
-                          alignItems="center"
-                          sx={{
-                            borderRadius: "6px",
-                            width: "25px",
-                            height: "25px",
-                          }}
-                        >
-                          <IoBuild color="#fff" size="12px" />
-                        </VuiBox>
-                        <VuiTypography
-                          color="text"
-                          variant="button"
-                          fontWeight="medium"
-                        >
-                          Items
-                        </VuiTypography>
-                      </Stack>
-                      <VuiTypography
-                        color="white"
-                        variant="lg"
-                        fontWeight="bold"
-                        mb="8px"
-                      >
-                        320
-                      </VuiTypography>
-                      <VuiProgress
-                        value={60}
-                        color="info"
-                        sx={{ background: "#2D2E5F" }}
-                      />
-                    </Grid>
-                  </Grid>
+                  <VuiTypography color="white">
+                    {call?.analysis?.summary
+                      ? call.analysis.summary
+                      : "No Evaluation summary for this call"}
+                  </VuiTypography>
+                  <VuiBox flexGrow={1} />
                 </VuiBox>
               </Card>
             </Grid>
           </Grid>
         </VuiBox>
-        <Grid container spacing={3} direction="row" justifyContent="center" alignItems="stretch">
+        <Grid
+          container
+          spacing={3}
+          direction="row"
+          justifyContent="center"
+          alignItems="stretch"
+        >
           <Grid item xs={12} md={12} lg={8}>
             <Projects />
           </Grid>
@@ -322,4 +251,4 @@ function callDetails() {
   );
 }
 
-export default callDetails;
+export default CallDetails;

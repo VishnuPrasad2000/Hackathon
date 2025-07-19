@@ -21,15 +21,15 @@ const routes = [
     component: Dashboard,
     noCollapse: true,
   },
-    {
-    type: "collapse",
-    name: "test",
-    key: "test",
-    route: "/call Information",
-    icon: <IoHome size="15px" color="inherit" />,
-    component: callDetails,
-    noCollapse: true,
-  },
+  //   {
+  //   type: "collapse",
+  //   name: "test",
+  //   key: "test",
+  //   route: "/call Information",
+  //   icon: <IoHome size="15px" color="inherit" />,
+  //   component: callDetails,
+  //   noCollapse: true,
+  // },
   {
     type: "collapse",
     name: "Call Log",
@@ -37,6 +37,13 @@ const routes = [
     route: "/calllog",
     icon: <IoMegaphone size="15px" color="inherit" />,
     component: CallLogIndex,
+    noCollapse: true,
+  },
+  {
+    name: "Call Detail",
+    key: "CallLogDetail",
+    route: "/call-log/:id",
+    component: callDetails,
     noCollapse: true,
   },
   {
