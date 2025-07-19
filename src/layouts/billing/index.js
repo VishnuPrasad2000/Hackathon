@@ -1,32 +1,9 @@
-/*! 
-=========================================================
-* Vision UI Free React - v1.0.0
-=========================================================
-
-* Product Page: https://www.creative-tim.com/product/vision-ui-free-react
-* Copyright 2021 Creative Tim (https://www.creative-tim.com/)
-* Licensed under MIT (https://github.com/creativetimofficial/vision-ui-free-react/blob/master/LICENSE.md)
-
-* Design and Coded by Simmmple & Creative Tim
-=========================================================
-*/
-
 import Card from "@mui/material/Card";
-import billingCard from "assets/images/billing-background-card.png";
 import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
-
 import VuiBox from "components/VuiBox";
-import MasterCard from "examples/Cards/MasterCard";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
-
 import PaymentMethod from "layouts/billing/components/PaymentMethod";
-import Invoices from "layouts/billing/components/Invoices";
-import BillingInformation from "layouts/billing/components/BillingInformation";
-import Transactions from "layouts/billing/components/Transactions";
-import CreditBalance from "./components/CreditBalance";
 
 import { useEffect, useState } from "react";
 import { setAllAssistants } from "store/slices/assistantSlice";
@@ -120,7 +97,7 @@ function Billing() {
                     sx={{
                       minWidth: 300,
                       flexShrink: 0,
-                      background: `url('${billingCard}')`,
+                     // background: `url('${billingCard}')`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       backdropFilter: "blur(31px)",
@@ -133,10 +110,9 @@ function Billing() {
                     }}
                   >
                     <VuiBox p={2} pt={0}>
-                      <h6 style={{ color: "white", marginBottom: "0.5rem" }}>MasterCard 1</h6>
-                      <p style={{ color: "white" }}>Assistant Name: {assistant?.name}</p>
-                      <p style={{ color: "white" }}>Voice Provider: {assistant?.voice?.voiceId}</p>
-                      <p style={{ color: "white", marginBottom: "1rem" }}>{convertToIST(assistant?.createdAt)}</p>
+                      <h6 style={{ color: "white", marginBottom: "0.5rem" }}>Voice Assistant:</h6>
+                      <p style={{ color: "white" }}>Name: {assistant?.name}</p>
+                      <p style={{ color: "white" }}>Voice : {assistant?.voice?.voiceId}</p>
                     </VuiBox>
                   </Card>
                 ))}
