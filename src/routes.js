@@ -9,6 +9,7 @@ import { BsFillPersonFill } from "react-icons/bs";
 import { BsCreditCardFill } from "react-icons/bs";
 import { IoStatsChart } from "react-icons/io5";
 import { IoHome,IoMegaphone } from "react-icons/io5";
+import callDetails from "layouts/Calllog/callDetails";
 
 const routes = [
   {
@@ -18,6 +19,15 @@ const routes = [
     route: "/dashboard",
     icon: <IoHome size="15px" color="inherit" />,
     component: Dashboard,
+    noCollapse: true,
+  },
+    {
+    type: "collapse",
+    name: "test",
+    key: "test",
+    route: "/call Information",
+    icon: <IoHome size="15px" color="inherit" />,
+    component: callDetails,
     noCollapse: true,
   },
   {
