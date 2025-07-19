@@ -16,34 +16,44 @@ import { connect } from "react-redux";
 import colors from "assets/theme/base/colors";
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
+import { setAllPhoneNumbers } from "store/slices/phoneNumberSlice";
 
-function PhoneNumberIndex() {
-  const [tableData, setTableData] = useState([]);
+const API_URL = "https://api.vapi.ai/phone-number";
+const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
 
-  // Simulate API call
+function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
+  const [showForm, setShowForm] = useState(false);
+  const [newEntry, setNewEntry] = useState({ name: "", provider: "" });
+  const [editId, setEditId] = useState(null);
+
+  const fetchData = async () => {
+    try {
+      const response = await fetch(API_URL, {
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Failed to fetch phone numbers");
+      const data = await response.json();
+      const mappedData = data.map((num) => ({
+        id: num.id,
+        name: num.name,
+        provider: num.provider,
+        createdOn: num.createdAt
+          ? new Date(num.createdAt).toLocaleDateString("en-CA")
+          : "",
+      }));
+      setAllPhoneNumbers(mappedData);
+    } catch (error) {
+      console.error(error);
+      setAllPhoneNumbers([]);
+    }
+  };
+
   useEffect(() => {
-    // Replace this with actual API call
-    const fetchData = async () => {
-      // Simulated API data
-      const data = [
-        {
-          id: 1,
-          name: "Plan A",
-          provider: "Provider X",
-          createdOn: "2025-07-01",
-        },
-        {
-          id: 2,
-          name: "Plan B",
-          provider: "Provider Y",
-          createdOn: "2025-07-15",
-        },
-      ];
-
-      setTableData(data);
-    };
-
     fetchData();
+    // eslint-disable-next-line
   }, []);
 
   const columns = [
@@ -56,46 +66,95 @@ function PhoneNumberIndex() {
   const { grey } = colors;
   const { size, fontWeightBold } = typography;
   const { borderWidth } = borders;
-  const [showForm, setShowForm] = useState(false);
-  const [newEntry, setNewEntry] = useState({ name: "", provider: "" });
 
- const handleChange = (e) => {
-  const { name, value } = e.target;
-  setNewEntry((prev) => ({ ...prev, [name]: value }));
-};
-
-const handleSave = async () => {
-  const { name, provider } = newEntry;
-  if (!name || !provider) return alert("All fields are required.");
-
-  const payload = {
-    name,
-    provider,
-    sipUri: `sip:${name}@sip.vapi.ai`,
-    fallbackDestination: {
-      type: "number",
-      number: "+18596952804",
-    },
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setNewEntry((prev) => ({ ...prev, [name]: value }));
   };
 
-  try {
-    const response = await fetch("https://api.vapi.ai/phone-numbers", {
-      method: "POST",
-      headers: {
-        Authorization: "Bearer <YOUR_TOKEN_HERE>",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+  const handleSave = async () => {
+    const { name, provider } = newEntry;
+    if (!name || !provider) return alert("All fields are required.");
+    if (name.length < 8)
+      return alert("Name must be at least 8 characters.");
+    const sipName = name.toLowerCase().replace(/\s+/g, "");
 
-    const result = await response.json();
-    setShowForm(false);
-    setNewEntry({ name: "", provider: "" });
-  } catch (error) {
-    console.error(error);
-    alert("Failed to add.");
-  }
-};
+    let payload;
+    let method;
+    let url;
+
+    if (editId) {
+      payload = {
+        name,
+        sipUri: `sip:${sipName}@sip.vapi.ai`,
+        fallbackDestination: {
+          type: "number",
+          number: "+18596952804",
+        },
+      };
+      method = "PATCH";
+      url = `${API_URL}/${editId}`;
+    } else {
+      payload = {
+        name,
+        sipUri: `sip:${sipName}@sip.vapi.ai`,
+        provider,
+        fallbackDestination: {
+          type: "number",
+          number: "+18596952804",
+        },
+      };
+      method = "POST";
+      url = API_URL;
+    }
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok)
+        throw new Error(
+          editId ? "Failed to update." : "Failed to add."
+        );
+
+      setShowForm(false);
+      setEditId(null);
+      setNewEntry({ name: "", provider: "" });
+      await fetchData();
+    } catch (error) {
+      console.error(error);
+      alert(editId ? "Failed to update." : "Failed to add.");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this phone number?"
+      )
+    )
+      return;
+    try {
+      const response = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Failed to delete.");
+      await fetchData();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete.");
+    }
+  };
 
   const renderColumns = columns.map(({ name, align }) => (
     <VuiBox
@@ -116,22 +175,49 @@ const handleSave = async () => {
     </VuiBox>
   ));
 
-  const renderRows = tableData.map((row, key) => (
+  const renderRows = (tableData || []).map((row, key) => (
     <TableRow key={`row-${key}`}>
       {columns.map(({ accessor, align }) => {
         let content;
 
         if (accessor === "actions") {
           content = (
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={() => alert(`Edit ${row.name}`)}
-              style={{ backgroundColor: "#3f51b5", textTransform: "none" }}
-            >
-              Edit
-            </Button>
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => {
+                  setShowForm(true);
+                  setEditId(row.id);
+                  setNewEntry({
+                    name: row.name,
+                    provider: row.provider,
+                  });
+                }}
+                style={{
+                  backgroundColor: "#3f51b5",
+                  textTransform: "none",
+                  marginRight: 12,
+                  minWidth: 70,
+                }}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="contained"
+                color="error"
+                size="small"
+                onClick={() => handleDelete(row.id)}
+                style={{
+                  backgroundColor: "#f44336",
+                  textTransform: "none",
+                  minWidth: 70,
+                }}
+              >
+                Delete
+              </Button>
+            </>
           );
         } else {
           content = row[accessor];
@@ -160,7 +246,7 @@ const handleSave = async () => {
   ));
 
   return (
-    <div style={{height: "100vh"}}>
+    <div style={{ height: "100vh" }}>
       <DashboardLayout>
         <DashboardNavbar />
         <VuiBox py={3}>
@@ -170,7 +256,7 @@ const handleSave = async () => {
               justifyContent="space-between"
               alignItems="center"
               p={2}
-              pr={3} 
+              pr={3}
             >
               <VuiTypography variant="lg" color="white">
                 Phone Number
@@ -179,8 +265,12 @@ const handleSave = async () => {
               <Button
                 variant="contained"
                 color="primary"
-                sx={{ mr: 1 }} 
-               onClick={() => setShowForm(!showForm)}
+                sx={{ mr: 1 }}
+                onClick={() => {
+                  setShowForm(true);
+                  setEditId(null);
+                  setNewEntry({ name: "", provider: "" });
+                }}
               >
                 Add New
               </Button>
@@ -199,67 +289,99 @@ const handleSave = async () => {
           </Card>
         </VuiBox>
         {showForm && (
-  <VuiBox px={3} pt={2} pb={4}>
-    <Card sx={{ backgroundColor: "#1e1e2f", padding: "20px" }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <VuiTypography variant="button" color="white" fontWeight="medium" mb={1}>
-            Name
-          </VuiTypography>
-          <input
-            type="text"
-            name="name"
-            value={newEntry.name}
-            onChange={handleChange}
-            placeholder="Enter name"
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-            }}
-          />
-        </Grid>
+          <VuiBox px={3} pt={2} pb={4}>
+            <Card
+              sx={{ backgroundColor: "#1e1e2f", padding: "20px" }}
+            >
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <VuiTypography
+                    variant="button"
+                    color="white"
+                    fontWeight="medium"
+                    mb={1}
+                  >
+                    Name
+                  </VuiTypography>
+                  <input
+                    type="text"
+                    name="name"
+                    value={newEntry.name}
+                    onChange={handleChange}
+                    placeholder="Enter name"
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "4px",
+                      border: "1px solid #ccc",
+                    }}
+                  />
+                </Grid>
 
-        <Grid item xs={12} md={6}>
-          <VuiTypography variant="button" color="white" fontWeight="medium" mb={1}>
-            Provider
-          </VuiTypography>
-          <select
-            name="provider"
-            value={newEntry.provider}
-            onChange={handleChange}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-            }}
-          >
-            <option value="">Select Provider</option>
-            <option value="vapi">Vapi</option>
-            <option value="twilio">Twilio</option>
-          </select>
-        </Grid>
-      </Grid>
+                <Grid item xs={12} md={6}>
+                  <VuiTypography
+                    variant="button"
+                    color="white"
+                    fontWeight="medium"
+                    mb={1}
+                  >
+                    Provider
+                  </VuiTypography>
+                  <select
+                    name="provider"
+                    value={newEntry.provider}
+                    onChange={handleChange}
+                    disabled={!!editId}
+                    style={{
+                      width: "100%",
+                      padding: "10px",
+                      borderRadius: "4px",
+                      border: "1px solid #ccc",
+                    }}
+                  >
+                    <option value="">Select Provider</option>
+                    <option value="vapi">Vapi</option>
+                    <option value="twilio">Twilio</option>
+                  </select>
+                </Grid>
+              </Grid>
 
-      <VuiBox display="flex" justifyContent="flex-end" mt={3}>
-        <Button variant="contained" color="success" onClick={handleSave}>
-          Save
-        </Button>
-      </VuiBox>
-    </Card>
-  </VuiBox>
-)}
+              <VuiBox display="flex" justifyContent="flex-end" mt={3}>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  onClick={() => {
+                    setShowForm(false);
+                    setEditId(null);
+                    setNewEntry({ name: "", provider: "" });
+                  }}
+                  style={{ marginRight: 8 }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="contained"
+                  color="success"
+                  onClick={handleSave}
+                >
+                  {editId ? "Update" : "Save"}
+                </Button>
+              </VuiBox>
+            </Card>
+          </VuiBox>
+        )}
       </DashboardLayout>
     </div>
   );
 }
 
 const mapStateToProps = (state) => ({
+  tableData: state.phoneNumbers.phoneNumbers,
 });
 
 const mapDispatchToProps = (dispatch) => ({
+  setAllPhoneNumbers: (numbers) => dispatch(setAllPhoneNumbers(numbers)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(PhoneNumberIndex);
+
