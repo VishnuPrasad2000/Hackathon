@@ -11,7 +11,6 @@ import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
 import { connect } from "react-redux";
 import colors from "assets/theme/base/colors";
 import typography from "assets/theme/base/typography";

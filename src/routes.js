@@ -1,20 +1,14 @@
-
-
-// Vision UI Dashboard React layouts
 import Dashboard from "layouts/dashboard";
 import PhoneNumberIndex from "layouts/Phone_Number";
 import Assistant from "layouts/billing";
 import Profile from "layouts/profile";
 import SignIn from "layouts/authentication/sign-in";
-
-// Vision UI Dashboard React icons
-import { IoRocketSharp } from "react-icons/io5";
+import CallLogIndex from "layouts/Calllog";
 import { IoIosDocument } from "react-icons/io";
 import { BsFillPersonFill } from "react-icons/bs";
-import { IoBuild } from "react-icons/io5";
 import { BsCreditCardFill } from "react-icons/bs";
 import { IoStatsChart } from "react-icons/io5";
-import { IoHome } from "react-icons/io5";
+import { IoHome,IoMegaphone } from "react-icons/io5";
 
 const routes = [
   {
@@ -24,6 +18,15 @@ const routes = [
     route: "/dashboard",
     icon: <IoHome size="15px" color="inherit" />,
     component: Dashboard,
+    noCollapse: true,
+  },
+  {
+    type: "collapse",
+    name: "Call Log",
+    key: "Call Log",
+    route: "/calllog",
+    icon: <IoMegaphone size="15px" color="inherit" />,
+    component: CallLogIndex,
     noCollapse: true,
   },
   {
