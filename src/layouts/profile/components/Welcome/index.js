@@ -25,6 +25,9 @@ const Welcome = () => {
           <VuiTypography color="white" variant="button" fontWeight="regular">
             Nice to see you, Admin!
           </VuiTypography>
+          <VuiTypography color="white" variant="button" fontWeight="regular" mt="12px">
+            TelGenX is a cutting-edge voice automation platform that seamlessly integrates AI-powered call assistants with dynamic workflow orchestration using Vapi and n8n. Designed to handle real-time conversations, automate actions, and trigger external services like Telegram or CRMs, TelGenX enables businesses to replace manual call handling with intelligent, multilingual voice bots — scaling communication, reducing costs, and transforming customer engagement.
+          </VuiTypography>
         </VuiBox>
         <VuiBox justifySelf="flex-end">
           <VuiTypography

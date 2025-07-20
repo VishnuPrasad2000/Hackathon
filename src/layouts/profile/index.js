@@ -32,11 +32,11 @@ function Overview() {
           <Grid item xs={12} md={6}>
             <ProfileInfoCard
               title="profile information"
-              description="Hi Admistrator, If you can’t decide, the answer is no. If two equally difficult paths, choose the one more painful in the short term — pain avoidance is creating an illusion of equality."
+              description="Here’s a quick overview of your profile details and contact information. Make sure your information is up to date to stay connected and informed."
               info={{
                 fullName: "Admistrator",
                 mobile: "8717445623",
-                email: "Admin@telGenx.com",
+                email: "admin@gmail.com",
                 location: "Kochi, India",
               }}
               social={[
