@@ -8,28 +8,28 @@ import { IoIosDocument } from "react-icons/io";
 import { BsFillPersonFill } from "react-icons/bs";
 import { BsCreditCardFill } from "react-icons/bs";
 import { IoStatsChart } from "react-icons/io5";
-import { IoHome,IoMegaphone } from "react-icons/io5";
+import { IoHome, IoMegaphone } from "react-icons/io5";
 import callDetails from "layouts/Calllog/callDetails";
 
 const routes = [
-  {
-    type: "collapse",
-    name: "Dashboard",
-    key: "dashboard",
-    route: "/dashboard",
-    icon: <IoHome size="15px" color="inherit" />,
-    component: Dashboard,
-    noCollapse: true,
-  },
-  //   {
+  // {
   //   type: "collapse",
-  //   name: "test",
-  //   key: "test",
-  //   route: "/call Information",
+  //   name: "Dashboard",
+  //   key: "dashboard",
+  //   route: "/dashboard",
   //   icon: <IoHome size="15px" color="inherit" />,
-  //   component: callDetails,
+  //   component: Dashboard,
   //   noCollapse: true,
   // },
+  {
+    type: "collapse",
+    name: "Profile",
+    key: "profile",
+    route: "/profile",
+    icon: <BsFillPersonFill size="15px" color="inherit" />,
+    component: Profile,
+    noCollapse: true,
+  },
   {
     type: "collapse",
     name: "Call Log",
@@ -66,22 +66,13 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Profile",
-    key: "profile",
-    route: "/profile",
-    icon: <BsFillPersonFill size="15px" color="inherit" />,
-    component: Profile,
-    noCollapse: true,
-  },
-  {
-    type: "collapse",
     name: "Sign Out",
     key: "sign-out",
     route: "/authentication/sign-in",
     icon: <IoIosDocument size="15px" color="inherit" />,
     component: SignIn,
     noCollapse: true,
-  }
+  },
 ];
 
 export default routes;

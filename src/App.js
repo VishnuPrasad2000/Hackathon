@@ -11,11 +11,16 @@ import createCache from "@emotion/cache";
 import routes from "routes";
 
 // Vision UI Dashboard React contexts
-import { useVisionUIController, setMiniSidenav, setOpenConfigurator } from "context";
+import {
+  useVisionUIController,
+  setMiniSidenav,
+  setOpenConfigurator,
+} from "context";
 
 export default function App() {
   const [controller, dispatch] = useVisionUIController();
-  const { miniSidenav, direction, layout, openConfigurator, sidenavColor } = controller;
+  const { miniSidenav, direction, layout, openConfigurator, sidenavColor } =
+    controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const [rtlCache, setRtlCache] = useState(null);
   const { pathname } = useLocation();
@@ -64,13 +69,20 @@ export default function App() {
       }
 
       if (route.route) {
-        return <Route exact path={route.route} component={route.component} key={route.key} />;
+        return (
+          <Route
+            exact
+            path={route.route}
+            component={route.component}
+            key={route.key}
+          />
+        );
       }
 
       return null;
     });
 
-  return  (
+  return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       {layout === "dashboard" && (
@@ -82,13 +94,13 @@ export default function App() {
             routes={routes}
             onMouseEnter={handleOnMouseEnter}
             onMouseLeave={handleOnMouseLeave}
-          />  
+          />
         </>
       )}
 
       <Switch>
         {getRoutes(routes)}
-        <Redirect from="*" to="/authentication/sign-in"/>
+        <Redirect from="*" to="/profile" />
       </Switch>
     </ThemeProvider>
   );
