@@ -16,6 +16,7 @@ import colors from "assets/theme/base/colors";
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 import { setAllPhoneNumbers } from "store/slices/phoneNumberSlice";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const API_URL = "https://api.vapi.ai/phone-number";
 const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
@@ -24,8 +25,10 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
   const [showForm, setShowForm] = useState(false);
   const [newEntry, setNewEntry] = useState({ name: "", provider: "" });
   const [editId, setEditId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const response = await fetch(API_URL, {
         headers: {
@@ -47,12 +50,13 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
     } catch (error) {
       console.error(error);
       setAllPhoneNumbers([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line
   }, []);
 
   const columns = [
@@ -269,14 +273,26 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
             </VuiBox>
 
             <VuiBox px={3} pb={3}>
-              <TableContainer>
-                <MuiTable>
-                  <VuiBox component="thead">
-                    <TableRow>{renderColumns}</TableRow>
-                  </VuiBox>
-                  <TableBody>{renderRows}</TableBody>
-                </MuiTable>
-              </TableContainer>
+              {loading ? (
+                <VuiBox
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  minHeight="250px"
+                  width="100%"
+                >
+                  <CircularProgress size={50} thickness={5} color="inherit" />
+                </VuiBox>
+              ) : (
+                <TableContainer>
+                  <MuiTable>
+                    <VuiBox component="thead">
+                      <TableRow>{renderColumns}</TableRow>
+                    </VuiBox>
+                    <TableBody>{renderRows}</TableBody>
+                  </MuiTable>
+                </TableContainer>
+              )}
             </VuiBox>
           </Card>
         </VuiBox>

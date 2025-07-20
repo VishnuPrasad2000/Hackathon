@@ -4,6 +4,7 @@ import TableBody from "@mui/material/TableBody";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
 import MuiTable from "@mui/material/Table";
+import CircularProgress from "@mui/material/CircularProgress";
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -21,9 +22,11 @@ const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
 function CallLogIndex() {
   const [tableData, setTableData] = useState([]);
   const [assistantMap, setAssistantMap] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchAssistants = async () => {
+      setLoading(true);
       try {
         const response = await fetch(ASSISTANT_API_URL, {
           method: "GET",
@@ -39,14 +42,15 @@ function CallLogIndex() {
       } catch (error) {
         console.error("Error fetching assistants:", error);
         setAssistantMap({});
+        setLoading(false);
       }
     };
-
     fetchAssistants();
   }, []);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const response = await fetch(API_URL, {
           method: "GET",
@@ -62,9 +66,10 @@ function CallLogIndex() {
       } catch (error) {
         console.error("Error:", error);
         alert("Something went wrong.");
+      } finally {
+        setLoading(false);
       }
     };
-
     if (Object.keys(assistantMap).length > 0) {
       fetchData();
     }
@@ -199,7 +204,7 @@ function CallLogIndex() {
     </TableRow>
   ));
 
-  // Render main layout
+  // Main layout (loader only inside the Card)
   return (
     <div style={{ height: "100vh" }}>
       <DashboardLayout>
@@ -217,16 +222,27 @@ function CallLogIndex() {
                 Call Logs
               </VuiTypography>
             </VuiBox>
-
             <VuiBox px={3} pb={3}>
-              <TableContainer>
-                <MuiTable>
-                  <VuiBox component="thead">
-                    <TableRow>{renderColumns}</TableRow>
-                  </VuiBox>
-                  <TableBody>{renderRows}</TableBody>
-                </MuiTable>
-              </TableContainer>
+              {loading ? (
+                <VuiBox
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  minHeight="250px"
+                  width="100%"
+                >
+                  <CircularProgress size={50} thickness={5} color="inherit" />
+                </VuiBox>
+              ) : (
+                <TableContainer>
+                  <MuiTable>
+                    <VuiBox component="thead">
+                      <TableRow>{renderColumns}</TableRow>
+                    </VuiBox>
+                    <TableBody>{renderRows}</TableBody>
+                  </MuiTable>
+                </TableContainer>
+              )}
             </VuiBox>
           </Card>
         </VuiBox>
@@ -239,4 +255,3 @@ const mapStateToProps = (state) => ({});
 const mapDispatchToProps = (dispatch) => ({});
 
 export default connect(mapStateToProps, mapDispatchToProps)(CallLogIndex);
-
