@@ -43,7 +43,7 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
       const response = await fetch("https://api.vapi.ai/assistant", {
         method: "GET",
         headers: {
-          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
       });
@@ -261,7 +261,7 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
       const response = await fetch(`https://api.vapi.ai/phone-number/${numberId}`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${API_TOKEN}`,
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),

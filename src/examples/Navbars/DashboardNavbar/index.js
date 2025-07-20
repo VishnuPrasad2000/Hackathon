@@ -150,21 +150,6 @@ function DashboardNavbar({ absolute, light, isMini }) {
         </VuiBox>
         {isMini ? null : (
           <VuiBox sx={(theme) => navbarRow(theme, { isMini })}>
-            <VuiBox pr={1}>
-              <VuiInput
-                placeholder="Type here..."
-                icon={{ component: "search", direction: "left" }}
-                sx={({ breakpoints }) => ({
-                  [breakpoints.down("sm")]: {
-                    maxWidth: "80px",
-                  },
-                  [breakpoints.only("sm")]: {
-                    maxWidth: "80px",
-                  },
-                  backgroundColor: "info.main !important",
-                })}
-              />
-            </VuiBox>
             <VuiBox color={light ? "white" : "inherit"}>
               <Link to="/authentication/sign-in">
                 <IconButton sx={navbarIconButton} size="small">
@@ -180,7 +165,7 @@ function DashboardNavbar({ absolute, light, isMini }) {
                     fontWeight="medium"
                     color={light ? "white" : "dark"}
                   >
-                    Sign in
+                    Sign Out
                   </VuiTypography>
                 </IconButton>
               </Link>
@@ -191,25 +176,6 @@ function DashboardNavbar({ absolute, light, isMini }) {
                 onClick={handleMiniSidenav}
               >
                 <Icon className={"text-white"}>{miniSidenav ? "menu_open" : "menu"}</Icon>
-              </IconButton>
-              <IconButton
-                size="small"
-                color="inherit"
-                sx={navbarIconButton}
-                onClick={handleConfiguratorOpen}
-              >
-                <Icon>settings</Icon>
-              </IconButton>
-              <IconButton
-                size="small"
-                color="inherit"
-                sx={navbarIconButton}
-                aria-controls="notification-menu"
-                aria-haspopup="true"
-                variant="contained"
-                onClick={handleOpenMenu}
-              >
-                <Icon className={light ? "text-white" : "text-dark"}>notifications</Icon>
               </IconButton>
               {renderMenu()}
             </VuiBox>
