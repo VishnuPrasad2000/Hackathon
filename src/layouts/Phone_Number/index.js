@@ -19,6 +19,9 @@ import { setAllPhoneNumbers } from "store/slices/phoneNumberSlice";
 import CircularProgress from "@mui/material/CircularProgress";
 import { BEARER_TOKEN } from "config";
 import Swal from "sweetalert2";
+import { useDispatch } from "react-redux";
+import { setAllAssistants } from "store/slices/assistantSlice";
+import { useSelector } from "react-redux";
 
 const API_URL = "https://api.vapi.ai/phone-number";
 
@@ -27,6 +30,34 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
   const [newEntry, setNewEntry] = useState({ name: "", provider: "" });
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
+  const [selectedAssistant, setSelectedAssistant] = useState('')
+  const [assignedAssistance, setAssignedAssistance] = useState()
+
+  useEffect(() => {
+    getAssistants()
+  }, [])
+
+  const getAssistants = async () => {
+    try {
+      const response = await fetch("https://api.vapi.ai/assistant", {
+        method: "GET",
+        headers: {
+          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+      dispatch(setAllAssistants(result));
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add.");
+    }
+  };
+
+  let assistants = [];
+  assistants = useSelector((state) => state.assistants);
 
   const fetchData = async () => {
     setLoading(true);
@@ -39,6 +70,7 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
       });
       if (!response.ok) throw new Error("Failed to fetch phone numbers");
       const data = await response.json();
+      debugger
       const mappedData = data.map((num) => ({
         id: num.id,
         name: num.name,
@@ -46,6 +78,7 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
         createdOn: num.createdAt
           ? new Date(num.createdAt).toLocaleDateString("en-CA")
           : "",
+        assistant: num.assistantId
       }));
       setAllPhoneNumbers(mappedData);
     } catch (error) {
@@ -211,6 +244,38 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
     }
   };
 
+  const assignNumber = async (e, numberId) => {
+    debugger
+    setSelectedAssistant(e)
+
+    const payload = {
+      'assistantId': e,
+      "fallbackDestination": {
+        "type": "number",
+        "number": "+18596952804"
+      },
+      "name": "demo_hackathon",
+    }
+
+    try {
+      const response = await fetch(`https://api.vapi.ai/phone-number/${numberId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${API_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      getAssistants();
+      fetchData();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to add.");
+    }
+  }
+
   const renderColumns = columns.map(({ name, align }) => (
     <VuiBox
       key={name}
@@ -234,8 +299,12 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
     <TableRow key={`row-${key}`}>
       {columns.map(({ accessor, align }) => {
         let content;
-
+        debugger
         if (accessor === "actions") {
+          debugger
+          const assistantsWithoutId = Array.isArray(assistants?.assistants)
+            ? assistants.assistants.filter(a => a.assistantId === undefined || a.assistantId === null)
+            : [];
           content = (
             <>
               <Button
@@ -272,6 +341,28 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
               >
                 Delete
               </Button>
+              <select
+                name={'assistant'}
+                value={row.assistant}
+                onChange={(e) => assignNumber(e.target.value, row.id)}
+                style={{
+                  marginLeft: '10px',
+                  backgroundColor: 'transparent',
+                  padding: "10px",
+                  color: "black",
+                  backgroundColor: "#fff",
+                  border: "1px solid #555",
+                  borderRadius: "4px",
+                  paddingRight: "10px"
+                }}
+              >
+                <option value="">Select assistant</option>
+                {assistantsWithoutId.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </select>
             </>
           );
         } else {
