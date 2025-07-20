@@ -4,10 +4,10 @@ import VuiBox from "components/VuiBox";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import PaymentMethod from "layouts/billing/components/PaymentMethod";
-
 import { useEffect, useState } from "react";
 import { setAllAssistants } from "store/slices/assistantSlice";
 import { useSelector, useDispatch } from "react-redux";
+import { BEARER_TOKEN } from "config";
 
 
 function Billing() {
@@ -19,7 +19,7 @@ function Billing() {
       const response = await fetch("https://api.vapi.ai/assistant", {
         method: "GET",
         headers: {
-          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
       });

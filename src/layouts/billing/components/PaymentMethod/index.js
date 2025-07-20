@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import Card from "@mui/material/Card"; // You can replace this too if needed
-import Grid from "@mui/material/Grid"; // Optional: Can replace with flexbox later
+import Card from "@mui/material/Card"; 
+import Grid from "@mui/material/Grid"; 
 import VuiBox from "components/VuiBox";
 import VuiTypography from "components/VuiTypography";
 import VuiButton from "components/VuiButton";
@@ -9,6 +9,7 @@ import Box from "@mui/material/Box";
 import { useDispatch } from "react-redux";
 import { setTools } from "store/slices/assistantSlice";
 import { useSelector } from "react-redux";
+import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import {
   FormControl,
   Select,
@@ -16,6 +17,7 @@ import {
   Checkbox,
   ListItemText
 } from "@mui/material";
+import { BEARER_TOKEN } from "config";
 
 function PaymentMethod(props) {
   const { assistant } = props;
@@ -92,7 +94,7 @@ function PaymentMethod(props) {
       const response = await fetch("https://api.vapi.ai/tool", {
         method: "GET",
         headers: {
-          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
       });
@@ -191,7 +193,7 @@ function PaymentMethod(props) {
       const response = await fetch("https://api.vapi.ai/assistant", {
         method: "POST",
         headers: {
-          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -285,7 +287,7 @@ function PaymentMethod(props) {
       const response = await fetch(`https://api.vapi.ai/assistant/${assistant.id}`, {
         method: "PATCH",
         headers: {
-          Authorization: "Bearer 75c582df-b889-48e6-9057-228cec47c1b7",
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -465,16 +467,19 @@ function PaymentMethod(props) {
         <VuiTypography variant="lg" fontWeight="bold" color="white">
           Create a New Assistant
         </VuiTypography>
-        <VuiButton
-          onClick={() => {
+              <VuiBox
+        display="flex"
+        justifyContent="flex-end"
+        alignItems="center"
+        pt="16px"
+      >
+        <VuiButton variant="contained" color="info" onClick={() => {
             resetValues()
             setIsUpdating(false);
-          }}
-          variant="contained">
-          <VuiTypography color="black" fontWeight="small">
-            Create Assistant
-          </VuiTypography>
+          }}>
+           Add Assistant
         </VuiButton>
+      </VuiBox>
       </VuiBox>
 
       <Grid container spacing={3}>
@@ -494,15 +499,15 @@ function PaymentMethod(props) {
           ])}
         </Grid>
         <Grid item xs={12} md={6}>
+          {renderSelect("Voice Provider", "voiceProvider", [
+            { value: "azure", label: "azure" },
+          ])}
+        </Grid>
+        <Grid item xs={12} md={6}>
           {renderSelect("Voice", "voiceId", [
             { value: "emma", label: "emma" },
             { value: "andrew", label: "andrew" },
             { value: "brian", label: "brian" },
-          ])}
-        </Grid>
-        <Grid item xs={12} md={6}>
-          {renderSelect("Voice Provider", "voiceProvider", [
-            { value: "azure", label: "azure" },
           ])}
         </Grid>
         <Grid item xs={12} md={4}>
@@ -511,20 +516,20 @@ function PaymentMethod(props) {
         <Grid item xs={12} md={4}>
           {renderInput("End Call Message", "endCallMessage")}
         </Grid>
-        <Grid item xs={12} md={4}>
-          <>
-            {renderMultiSelect(
-              "Tools",
-              "toolIds",
-              tools.map((tool) => ({
-                value: tool.id,
-                label: tool.name ?? tool.function?.name ?? "Unnamed Tool",
-              }))
-            )}
-          </>
-        </Grid>
         <Grid item xs={12}>
-          <button onClick={() => setOpenModal(true)} style={{ position: 'absolute', right: 45, marginTop: 10, padding: "0px 10px 0px 10px" }}>Generate</button>
+          <VuiButton
+            variant="contained"
+            color="info"
+            onClick={() => setOpenModal(true)}
+            sx={{
+              position: "absolute",
+              right: 45,
+              mt:  "-5px",
+              px: "10px"
+            }}
+          >
+            Generate Prompt
+          </VuiButton>   
           {renderTextarea("Assistant Prompt (Messages)", "messages", 6)}
         </Grid>
         <Grid item xs={12}>
@@ -555,42 +560,69 @@ function PaymentMethod(props) {
         pt="16px"
       >
         <VuiButton variant="contained" color="info" onClick={isUpdating ? updateAssistant : handleSubmit}>
-          {isUpdating ? "Update" : "Create"}
+          {isUpdating ? "Update" : "Save"}
         </VuiButton>
       </VuiBox>
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box
-          sx={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            width: '60%',
-            bgcolor: "background.paper",
-            borderRadius: 2,
-            boxShadow: 24,
-            p: 4,
-          }}
-        >
-          <h2>Generate Assistant Prompt</h2>
-          <p>You can add any prompt logic here.</p>
-          <textarea
-            rows={7}
-            value={context}
-            onChange={(e) => setContext(e.target.value)}
-            style={{
-              width: '100%',
-              resize: 'vertical',
-              padding: '10px',
-              border: '1px solid #ccc',
-              borderRadius: '4px',
-            }}
-          />
+    <DashboardLayout>
+          <Modal open={openModal} onClose={() => setOpenModal(false)}>
+            <Box
+              sx={{
+                position: "absolute",
+                top: "55%",
+                left: "55%",
+                transform: "translate(-50%, -50%)",
+                width: '60%',
+                backgroundColor: "ffff",
+                color: "white",
+                borderRadius: "16px",
+                p: 4,
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                backdropFilter: "blur(35px)",
+              }}
+            >
+              <h2 style={{ marginTop: 0,color: "white", }}>Generate Custom Assistant Prompt with Departments</h2>
+              <p style={{ marginTop: 0,color: "white", }}>You can add any prompt logic here.</p>
 
-          <VuiButton onClick={() => setOpenModal(false)} color={'black'}>Close</VuiButton>
-          <VuiButton onClick={() => getPrompt()} color={'black'}>Create</VuiButton>
-        </Box>
-      </Modal>
+              <Grid item xs={12} md={4}>
+                <>
+                  {renderMultiSelect(
+                    "Tools",
+                    "toolIds",
+                    tools.map((tool) => ({
+                      value: tool.id,
+                      label: tool.name ?? tool.function?.name ?? "Unnamed Tool",
+                    }))
+                  )}
+                </>
+              </Grid>
+
+              <textarea
+                rows={7}
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+                style={{
+                  width: '100%',
+                  minHeight: '200px', 
+                  resize: 'vertical',
+                  padding: '10px',
+                  border: '1px solid #ccc',
+                  borderRadius: '8px',
+                  marginTop: '16px',
+                  fontSize: '14px',
+                }}
+              />
+
+              <VuiBox display="flex" justifyContent="flex-end" gap="8px" mt={2}>
+                <VuiButton variant="contained" color="info" onClick={() => getPrompt()}>
+                  Create
+                </VuiButton>
+                <VuiButton variant="contained" color="info" onClick={() => setOpenModal(false)}>
+                  Close
+                </VuiButton>
+              </VuiBox>
+            </Box>
+          </Modal>
+          </DashboardLayout>
     </Card>
   );
 }

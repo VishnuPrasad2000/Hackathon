@@ -17,9 +17,9 @@ import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 import { setAllPhoneNumbers } from "store/slices/phoneNumberSlice";
 import CircularProgress from "@mui/material/CircularProgress";
+import { BEARER_TOKEN } from "config";
 
 const API_URL = "https://api.vapi.ai/phone-number";
-const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
 
 function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
   const [showForm, setShowForm] = useState(false);
@@ -32,7 +32,7 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
     try {
       const response = await fetch(API_URL, {
         headers: {
-          Authorization: `Bearer ${API_TOKEN}`,
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
       });
@@ -114,7 +114,7 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
       const response = await fetch(url, {
         method,
         headers: {
-          Authorization: `Bearer ${API_TOKEN}`,
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
@@ -140,7 +140,7 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${API_TOKEN}`,
+          Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
       });

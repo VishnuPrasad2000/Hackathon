@@ -1,0 +1,1 @@
+export const BEARER_TOKEN = '75c582df-b889-48e6-9057-228cec47c1b7';

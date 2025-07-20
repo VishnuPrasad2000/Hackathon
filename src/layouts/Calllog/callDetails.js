@@ -11,8 +11,7 @@ import colors from "assets/theme/base/colors";
 import WelcomeMark from "layouts/Calllog/WelcomeMark";
 import Projects from "layouts/dashboard/components/Projects";
 import SatisfactionRate from "layouts/Calllog/SatisfactionRate";
-
-const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
+import { BEARER_TOKEN } from "config";
 
 function CallDetails() {
   const { id } = useParams();
@@ -27,7 +26,7 @@ function CallDetails() {
     fetch(`https://api.vapi.ai/call/${id}`, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${API_TOKEN}`,
+        Authorization: `Bearer ${BEARER_TOKEN}`,
         "Content-Type": "application/json",
       },
     })
@@ -41,7 +40,7 @@ function CallDetails() {
           fetch("https://api.vapi.ai/assistant", {
             method: "GET",
             headers: {
-              Authorization: `Bearer ${API_TOKEN}`,
+              Authorization: `Bearer ${BEARER_TOKEN}`,
               "Content-Type": "application/json",
             },
           })

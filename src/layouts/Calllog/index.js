@@ -14,10 +14,10 @@ import colors from "assets/theme/base/colors";
 import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import { BEARER_TOKEN } from "config";
 
 const API_URL = "https://api.vapi.ai/call";
 const ASSISTANT_API_URL = "https://api.vapi.ai/assistant";
-const API_TOKEN = "1aabca24-158a-4c8a-988b-fbb6ff3aebab";
 
 function CallLogIndex() {
   const [tableData, setTableData] = useState([]);
@@ -31,7 +31,7 @@ function CallLogIndex() {
         const response = await fetch(ASSISTANT_API_URL, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${API_TOKEN}`,
+            Authorization: `Bearer ${BEARER_TOKEN}`,
             "Content-Type": "application/json",
           },
         });
@@ -55,7 +55,7 @@ function CallLogIndex() {
         const response = await fetch(API_URL, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${API_TOKEN}`,
+            Authorization: `Bearer ${BEARER_TOKEN}`,
             "Content-Type": "application/json",
           },
         });
