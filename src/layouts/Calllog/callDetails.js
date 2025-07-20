@@ -4,10 +4,10 @@ import Grid from "@mui/material/Grid";
 import { Card } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import VuiBox from "components/VuiBox";
+import VuiButton from "components/VuiButton";
 import VuiTypography from "components/VuiTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import colors from "assets/theme/base/colors";
 import WelcomeMark from "layouts/Calllog/WelcomeMark";
 import Projects from "layouts/dashboard/components/Projects";
 import SatisfactionRate from "layouts/Calllog/SatisfactionRate";
@@ -79,7 +79,13 @@ function CallDetails() {
           {loading ? (
             <CircularProgress size={40} thickness={4} color="inherit" />
           ) : (
+            
             <VuiBox py={3}>
+            <VuiBox display="flex" justifyContent="flex-end" mt={2} mb={2}>
+              <VuiButton variant="contained" color="info" onClick={() => (window.location.href = `/Calllog`)}>
+                Go Back
+              </VuiButton>
+            </VuiBox>
               <VuiBox mb={3}>
                 <Grid container spacing={3}>
                   <Grid item xs={12}>

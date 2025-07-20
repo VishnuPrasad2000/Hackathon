@@ -1,9 +1,3 @@
-/*!
-=========================================================
-* Vision UI Free React - v1.0.0
-=========================================================
-...
-*/
 
 // @mui material components
 import Card from "@mui/material/Card";
