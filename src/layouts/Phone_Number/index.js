@@ -18,8 +18,7 @@ import borders from "assets/theme/base/borders";
 import { setAllPhoneNumbers } from "store/slices/phoneNumberSlice";
 import CircularProgress from "@mui/material/CircularProgress";
 import { BEARER_TOKEN } from "config";
-import Swal from 'sweetalert2';
-
+import Swal from "sweetalert2";
 
 const API_URL = "https://api.vapi.ai/phone-number";
 
@@ -77,114 +76,138 @@ function PhoneNumberIndex({ tableData, setAllPhoneNumbers }) {
     setNewEntry((prev) => ({ ...prev, [name]: value }));
   };
 
-const handleSave = async () => {
-  const { name, provider } = newEntry;
+  const handleSave = async () => {
+    const { name, provider } = newEntry;
 
-  if (!name || !provider) {
-    Swal.fire({
-      icon: "warning",
-      title: "Missing Fields",
-      text: "All fields are required.",
-    });
-    return;
-  }
-
-  if (name.length < 8) {
-    Swal.fire({
-      icon: "info",
-      title: "Invalid Name",
-      text: "Name must be at least 8 characters.",
-    });
-    return;
-  }
-
-  const sipName = name.toLowerCase().replace(/\s+/g, "");
-
-  let payload;
-  let method;
-  let url;
-
-  if (editId) {
-    payload = {
-      name,
-      sipUri: `sip:${sipName}@sip.vapi.ai`,
-      fallbackDestination: {
-        type: "number",
-        number: "+18596952804",
-      },
-    };
-    method = "PATCH";
-    url = `${API_URL}/${editId}`;
-  } else {
-    payload = {
-      name,
-      sipUri: `sip:${sipName}@sip.vapi.ai`,
-      provider,
-      fallbackDestination: {
-        type: "number",
-        number: "+18596952804",
-      },
-    };
-    method = "POST";
-    url = API_URL;
-  }
-
-try {
-  const response = await fetch(url, {
-    method,
-    headers: {
-      Authorization: `Bearer ${BEARER_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(editId ? "Failed to update." : "Failed to add.");
-  }
-
-  Swal.fire({
-    icon: "success",
-    title: editId ? "Updated Successfully" : "Added Successfully",
-    showConfirmButton: true,
-    position: "center", 
-  }).then(async () => {
-    setShowForm(false);
-    setEditId(null);
-    setNewEntry({ name: "", provider: "" });
-    await fetchData();
-  });
-
-} catch (error) {
-  console.error(error);
-  Swal.fire({
-    icon: "error",
-    title: "Operation Failed",
-    text: editId ? "Failed to update." : "Failed to add.",
-    showConfirmButton: true,
-    position: "center",
-  });
-}
-
-};
-
-
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this phone number?"))
+    if (!name || !provider) {
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
+        text: "All fields are required.",
+      });
       return;
+    }
+
+    if (name.length < 8) {
+      Swal.fire({
+        icon: "info",
+        title: "Invalid Name",
+        text: "Name must be at least 8 characters.",
+      });
+      return;
+    }
+
+    const sipName = name.toLowerCase().replace(/\s+/g, "");
+
+    let payload;
+    let method;
+    let url;
+
+    if (editId) {
+      payload = {
+        name,
+        sipUri: `sip:${sipName}@sip.vapi.ai`,
+        fallbackDestination: {
+          type: "number",
+          number: "+18596952804",
+        },
+      };
+      method = "PATCH";
+      url = `${API_URL}/${editId}`;
+    } else {
+      payload = {
+        name,
+        sipUri: `sip:${sipName}@sip.vapi.ai`,
+        provider,
+        fallbackDestination: {
+          type: "number",
+          number: "+18596952804",
+        },
+      };
+      method = "POST";
+      url = API_URL;
+    }
+
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE",
+      const response = await fetch(url, {
+        method,
         headers: {
           Authorization: `Bearer ${BEARER_TOKEN}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error("Failed to delete.");
-      await fetchData();
+
+      if (!response.ok) {
+        throw new Error(editId ? "Failed to update." : "Failed to add.");
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: editId ? "Updated Successfully" : "Added Successfully",
+        showConfirmButton: true,
+        position: "center",
+      }).then(async () => {
+        setShowForm(false);
+        setEditId(null);
+        setNewEntry({ name: "", provider: "" });
+        await fetchData();
+      });
     } catch (error) {
       console.error(error);
-      alert("Failed to delete.");
+      Swal.fire({
+        icon: "error",
+        title: "Operation Failed",
+        text: editId ? "Failed to update." : "Failed to add.",
+        showConfirmButton: true,
+        position: "center",
+      });
+    }
+  };
+
+  // ======= UPDATED handleDelete: uses Swal "Are you sure?" dialog ========
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This phone number will be deleted permanently!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+      reverseButtons: true,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const response = await fetch(`${API_URL}/${id}`, {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${BEARER_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!response.ok) throw new Error("Failed to delete.");
+        await fetchData();
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "The phone number has been deleted.",
+          showConfirmButton: false,
+          timer: 1200,
+          position: "center",
+        });
+      } catch (error) {
+        console.error(error);
+        Swal.fire({
+          icon: "error",
+          title: "Operation Failed",
+          text: "Failed to delete.",
+          showConfirmButton: true,
+          position: "center",
+        });
+      }
     }
   };
 

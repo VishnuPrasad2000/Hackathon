@@ -18,14 +18,15 @@ import {
   ListItemText
 } from "@mui/material";
 import { BEARER_TOKEN } from "config";
+import Swal from "sweetalert2"; // ADDED
 
 function PaymentMethod(props) {
   const { assistant } = props;
   const [isUpdating, setIsUpdating] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const dispatch = useDispatch();
-  const [selectedTools, setSelectedTools] = useState([])
-  const [context, setContext] = useState('')
+  const [selectedTools, setSelectedTools] = useState([]);
+  const [context, setContext] = useState('');
 
   const initialFormData = {
     name: "",
@@ -39,7 +40,7 @@ function PaymentMethod(props) {
     transcriberModel: "",
     transcriberLanguage: "",
     transcriberProvider: "",
-    toolIds: "",
+    toolIds: [],
     serverUrl: ""
   };
 
@@ -58,15 +59,20 @@ function PaymentMethod(props) {
         }
       });
     }
-  }, [formData])
+    // eslint-disable-next-line
+  }, [formData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   useEffect(() => {
     fetchTools();
+    // eslint-disable-next-line
   }, []);
 
   useEffect(() => {
@@ -87,6 +93,7 @@ function PaymentMethod(props) {
         toolIds: assistant?.model?.toolIds || []
       });
     }
+    // eslint-disable-next-line
   }, [assistant]);
 
   const fetchTools = async () => {
@@ -98,7 +105,6 @@ function PaymentMethod(props) {
           "Content-Type": "application/json",
         },
       });
-
       const result = await response.json();
 
       const formattedTools = result.map((tool, index) => ({
@@ -110,10 +116,17 @@ function PaymentMethod(props) {
       dispatch(setTools(formattedTools));
     } catch (error) {
       console.error("Error:", error);
-      alert("Something went wrong.");
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Fetch Tools",
+        text: "Something went wrong while fetching tools.",
+        showConfirmButton: true,
+        position: "center"
+      });
     }
-  }
+  };
 
+  // ===================== REPLACE ALERT WITH SWAL ====================
   const handleSubmit = async () => {
     const {
       name,
@@ -143,9 +156,15 @@ function PaymentMethod(props) {
       !transcriberModel ||
       !transcriberLanguage ||
       !transcriberProvider ||
-      !toolIds
+      !(toolIds && toolIds.length)
     ) {
-      alert("Please fill in all required fields.");
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
+        text: "Please fill in all required fields.",
+        showConfirmButton: true,
+        position: "center"
+      });
       return;
     }
 
@@ -201,10 +220,22 @@ function PaymentMethod(props) {
 
       const result = await response.json();
       console.log("Assistant created:", result);
-      alert(`Assistant ${isUpdating ? 'updated' : 'created'} successfully!`);
+
+      Swal.fire({
+        icon: "success",
+        title: `Assistant ${isUpdating ? "updated" : "created"} successfully!`,
+        showConfirmButton: true,
+        position: "center",
+      });
     } catch (error) {
       console.error("Error:", error);
-      alert("Something went wrong.");
+      Swal.fire({
+        icon: "error",
+        title: "Operation Failed",
+        text: "Something went wrong.",
+        showConfirmButton: true,
+        position: "center",
+      });
     }
   };
 
@@ -237,9 +268,15 @@ function PaymentMethod(props) {
       !transcriberModel ||
       !transcriberLanguage ||
       !transcriberProvider ||
-      !toolIds
+      !(toolIds && toolIds.length)
     ) {
-      alert("Please fill in all required fields.");
+      Swal.fire({
+        icon: "warning",
+        title: "Missing Fields",
+        text: "Please fill in all required fields.",
+        showConfirmButton: true,
+        position: "center"
+      });
       return;
     }
 
@@ -284,54 +321,78 @@ function PaymentMethod(props) {
     };
 
     try {
-      const response = await fetch(`https://api.vapi.ai/assistant/${assistant.id}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${BEARER_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `https://api.vapi.ai/assistant/${assistant.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${BEARER_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const result = await response.json();
-      console.log("Assistant created:", result);
-      alert(`Assistant ${isUpdating ? 'updated' : 'created'} successfully!`);
+      console.log("Assistant updated:", result);
+
+      Swal.fire({
+        icon: "success",
+        title: `Assistant updated successfully!`,
+        showConfirmButton: true,
+        position: "center",
+      });
     } catch (error) {
       console.error("Error:", error);
-      alert("Something went wrong.");
+      Swal.fire({
+        icon: "error",
+        title: "Operation Failed",
+        text: "Something went wrong.",
+        showConfirmButton: true,
+        position: "center",
+      });
     }
-  }
+  };
 
   let tools = [];
   tools = useSelector((state) => state.assistants.tools);
 
   const getPrompt = async () => {
     try {
-      const response = await fetch('https://c273ff107526.ngrok-free.app/create-task-prompt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          context,
-          'tools': selectedTools
-        }),
-      });
+      const response = await fetch(
+        'https://c273ff107526.ngrok-free.app/create-task-prompt',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', },
+          body: JSON.stringify({
+            context,
+            'tools': selectedTools,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
 
       const result = await response.json();
-      setOpenModal(false)
+      setOpenModal(false);
       setFormData((prev) => ({ ...prev, messages: result }));
       return result;
     } catch (error) {
       console.error('Error creating task prompt:', error);
+      Swal.fire({
+        icon: "error",
+        title: "Prompt Generation Failed",
+        text: "Something went wrong while generating the prompt.",
+        showConfirmButton: true,
+        position: "center",
+      });
       return null;
     }
-  }
+  };
 
+  // ------------- Render helpers --------------
   const renderInput = (label, name) => (
     <VuiBox p="5px 20px">
       <VuiTypography variant="button" color="white" fontWeight="medium" mb={1}>
@@ -455,7 +516,7 @@ function PaymentMethod(props) {
     </VuiBox>
   );
 
-
+  // ------------- Main Render --------------
   return (
     <Card id="create-assistant">
       <VuiBox
@@ -467,19 +528,19 @@ function PaymentMethod(props) {
         <VuiTypography variant="lg" fontWeight="bold" color="white">
           Create a New Assistant
         </VuiTypography>
-              <VuiBox
-        display="flex"
-        justifyContent="flex-end"
-        alignItems="center"
-        pt="16px"
-      >
-        <VuiButton variant="contained" color="info" onClick={() => {
+        <VuiBox
+          display="flex"
+          justifyContent="flex-end"
+          alignItems="center"
+          pt="16px"
+        >
+          <VuiButton variant="contained" color="info" onClick={() => {
             resetValues()
             setIsUpdating(false);
           }}>
-           Add Assistant
-        </VuiButton>
-      </VuiBox>
+            Add Assistant
+          </VuiButton>
+        </VuiBox>
       </VuiBox>
 
       <Grid container spacing={3}>
@@ -524,12 +585,12 @@ function PaymentMethod(props) {
             sx={{
               position: "absolute",
               right: 45,
-              mt:  "-5px",
+              mt: "-5px",
               px: "10px"
             }}
           >
             Generate Prompt
-          </VuiButton>   
+          </VuiButton>
           {renderTextarea("Assistant Prompt (Messages)", "messages", 6)}
         </Grid>
         <Grid item xs={12}>
@@ -559,70 +620,75 @@ function PaymentMethod(props) {
         alignItems="center"
         pt="16px"
       >
-        <VuiButton variant="contained" color="info" onClick={isUpdating ? updateAssistant : handleSubmit}>
+        <VuiButton
+          variant="contained"
+          color="info"
+          onClick={isUpdating ? updateAssistant : handleSubmit}
+        >
           {isUpdating ? "Update" : "Save"}
         </VuiButton>
       </VuiBox>
-    <DashboardLayout>
-          <Modal open={openModal} onClose={() => setOpenModal(false)}>
-            <Box
-              sx={{
-                position: "absolute",
-                top: "55%",
-                left: "55%",
-                transform: "translate(-50%, -50%)",
-                width: '60%',
-                backgroundColor: "ffff",
-                color: "white",
-                borderRadius: "16px",
-                p: 4,
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                backdropFilter: "blur(35px)",
+      <DashboardLayout>
+        <Modal open={openModal} onClose={() => setOpenModal(false)}>
+          <Box
+            sx={{
+              position: "absolute",
+              top: "55%",
+              left: "55%",
+              transform: "translate(-50%, -50%)",
+              width: '60%',
+              backgroundColor: "ffff",
+              color: "white",
+              borderRadius: "16px",
+              p: 4,
+              border: "1px solid rgba(255, 255, 255, 0.2)",
+              backdropFilter: "blur(35px)",
+            }}
+          >
+            <h2 style={{ marginTop: 0, color: "white" }}>
+              Generate Custom Assistant Prompt with Departments
+            </h2>
+            <p style={{ marginTop: 0, color: "white" }}>
+              You can add any prompt logic here.
+            </p>
+            <Grid item xs={12} md={4}>
+              <>
+                {renderMultiSelect(
+                  "Tools",
+                  "toolIds",
+                  tools.map((tool) => ({
+                    value: tool.id,
+                    label: tool.name ?? tool.function?.name ?? "Unnamed Tool",
+                  }))
+                )}
+              </>
+            </Grid>
+            <textarea
+              rows={7}
+              value={context}
+              onChange={(e) => setContext(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: '200px',
+                resize: 'vertical',
+                padding: '10px',
+                border: '1px solid #ccc',
+                borderRadius: '8px',
+                marginTop: '16px',
+                fontSize: '14px',
               }}
-            >
-              <h2 style={{ marginTop: 0,color: "white", }}>Generate Custom Assistant Prompt with Departments</h2>
-              <p style={{ marginTop: 0,color: "white", }}>You can add any prompt logic here.</p>
-
-              <Grid item xs={12} md={4}>
-                <>
-                  {renderMultiSelect(
-                    "Tools",
-                    "toolIds",
-                    tools.map((tool) => ({
-                      value: tool.id,
-                      label: tool.name ?? tool.function?.name ?? "Unnamed Tool",
-                    }))
-                  )}
-                </>
-              </Grid>
-
-              <textarea
-                rows={7}
-                value={context}
-                onChange={(e) => setContext(e.target.value)}
-                style={{
-                  width: '100%',
-                  minHeight: '200px', 
-                  resize: 'vertical',
-                  padding: '10px',
-                  border: '1px solid #ccc',
-                  borderRadius: '8px',
-                  marginTop: '16px',
-                  fontSize: '14px',
-                }}
-              />
-
-              <VuiBox display="flex" justifyContent="flex-end" gap="8px" mt={2}>
-                <VuiButton variant="contained" color="info" onClick={() => getPrompt()}>
-                  Create
-                </VuiButton>
-                <VuiButton variant="contained" color="info" onClick={() => setOpenModal(false)}>
-                  Close
-                </VuiButton>
-              </VuiBox>
-            </Box>
-          </Modal>
-          </DashboardLayout>
+            />
+            <VuiBox display="flex" justifyContent="flex-end" gap="8px" mt={2}>
+              <VuiButton variant="contained" color="info" onClick={() => getPrompt()}>
+                Create
+              </VuiButton>
+              <VuiButton variant="contained" color="info" onClick={() => setOpenModal(false)}>
+                Close
+              </VuiButton>
+            </VuiBox>
+          </Box>
+        </Modal>
+      </DashboardLayout>
     </Card>
   );
 }

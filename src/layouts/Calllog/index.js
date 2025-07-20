@@ -15,6 +15,7 @@ import typography from "assets/theme/base/typography";
 import borders from "assets/theme/base/borders";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { BEARER_TOKEN } from "config";
+import Swal from "sweetalert2";
 
 const API_URL = "https://api.vapi.ai/call";
 const ASSISTANT_API_URL = "https://api.vapi.ai/assistant";
@@ -43,6 +44,13 @@ function CallLogIndex() {
         console.error("Error fetching assistants:", error);
         setAssistantMap({});
         setLoading(false);
+        Swal.fire({
+          icon: "error",
+          title: "Assistants Fetch Failed",
+          text: "Could not load assistant names. Please try again later.",
+          showConfirmButton: true,
+          position: "center"
+        });
       }
     };
     fetchAssistants();
@@ -65,7 +73,13 @@ function CallLogIndex() {
         setTableData(formattedData);
       } catch (error) {
         console.error("Error:", error);
-        alert("Something went wrong.");
+        Swal.fire({
+          icon: "error",
+          title: "Operation Failed",
+          text: "Something went wrong while fetching call logs.",
+          showConfirmButton: true,
+          position: "center"
+        });
       } finally {
         setLoading(false);
       }
@@ -73,6 +87,7 @@ function CallLogIndex() {
     if (Object.keys(assistantMap).length > 0) {
       fetchData();
     }
+    // eslint-disable-next-line
   }, [assistantMap]);
 
   const formatCallData = (data) => {
@@ -251,7 +266,7 @@ function CallLogIndex() {
   );
 }
 
-const mapStateToProps = (state) => ({});
-const mapDispatchToProps = (dispatch) => ({});
+const mapStateToProps = () => ({});
+const mapDispatchToProps = () => ({});
 
 export default connect(mapStateToProps, mapDispatchToProps)(CallLogIndex);
