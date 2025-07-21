@@ -9,7 +9,7 @@ import gif from "assets/images/cardimgfree.png";
 const WelcomeMark = () => {
   return (
     <Card sx={() => ({
-      height: "340px",
+      height: "375px",
       py: "32px",
       backgroundImage: `url(${gif})`,
       backgroundSize: "cover",
@@ -28,7 +28,7 @@ const WelcomeMark = () => {
             <br /> Ask me anything.
           </VuiTypography>
         </VuiBox>
-        <VuiTypography
+        {/* <VuiTypography
           component="a"
           href="#"
           variant="button"
@@ -53,7 +53,7 @@ const WelcomeMark = () => {
         >
           Tap to record
           <Icon sx={{ fontWeight: "bold", ml: "5px" }}>arrow_forward</Icon>
-        </VuiTypography>
+        </VuiTypography> */}
       </VuiBox>
     </Card>
   );

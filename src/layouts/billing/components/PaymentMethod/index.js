@@ -19,6 +19,7 @@ import {
 } from "@mui/material";
 import { BEARER_TOKEN } from "config";
 import Swal from "sweetalert2"; // ADDED
+import CircularProgress from "@mui/material/CircularProgress";
 
 function PaymentMethod(props) {
   const { assistant } = props;
@@ -27,6 +28,7 @@ function PaymentMethod(props) {
   const dispatch = useDispatch();
   const [selectedTools, setSelectedTools] = useState([]);
   const [context, setContext] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const initialFormData = {
     name: "",
@@ -358,6 +360,7 @@ function PaymentMethod(props) {
   tools = useSelector((state) => state.assistants.tools);
 
   const getPrompt = async () => {
+        setLoading(true);
     try {
       const response = await fetch(
         'https://c273ff107526.ngrok-free.app/create-task-prompt',
@@ -371,12 +374,13 @@ function PaymentMethod(props) {
         }
       );
 
+      setLoading(false);
+
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
       }
-
       const result = await response.json();
-      setOpenModal(false);
+      //setOpenModal(false);
       setFormData((prev) => ({ ...prev, messages: result }));
       return result;
     } catch (error) {
@@ -663,6 +667,17 @@ function PaymentMethod(props) {
                 )}
               </>
             </Grid>
+            {loading ? (
+                <VuiBox
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="center"
+                  minHeight="250px"
+                  width="100%"
+                >
+                  <CircularProgress size={50} thickness={5} color="inherit" />
+                </VuiBox>
+              ) :(
             <textarea
               rows={7}
               value={context}
@@ -678,6 +693,7 @@ function PaymentMethod(props) {
                 fontSize: '14px',
               }}
             />
+            )};
             <VuiBox display="flex" justifyContent="flex-end" gap="8px" mt={2}>
               <VuiButton variant="contained" color="info" onClick={() => getPrompt()}>
                 Create

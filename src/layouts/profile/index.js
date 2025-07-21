@@ -1,25 +1,28 @@
-
-// @mui material components
-import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import TwitterIcon from "@mui/icons-material/Twitter";
-
-// Vision UI Dashboard React components
 import VuiBox from "components/VuiBox";
-import VuiTypography from "components/VuiTypography";
 import ProfileInfoCard from "examples/Cards/InfoCards/ProfileInfoCard";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import Header from "layouts/profile/components/Header";
 import Welcome from "../profile/components/Welcome/index";
+import { Height } from "@mui/icons-material";
+import { height } from "@mui/system";
 
 function Overview() {
   return (
     <DashboardLayout>
       <Header />
-      <VuiBox mt={5} mb={3}>
-        <Grid container spacing={3}>
+      <VuiBox  
+        mt={4}
+      sx={{
+      height: '100vh',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+    }}>
+        <Grid container spacing={3} >
           <Grid item xs={12} md={6}>
             <Welcome />
           </Grid>

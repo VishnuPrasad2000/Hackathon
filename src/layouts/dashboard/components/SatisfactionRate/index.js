@@ -7,23 +7,24 @@ import { IoHappy } from 'react-icons/io5';
 import colors from 'assets/theme/base/colors';
 import linearGradient from 'assets/theme/functions/linearGradient';
 import CircularProgress from '@mui/material/CircularProgress';
+import { Margin } from '@mui/icons-material';
 
 const SatisfactionRate = () => {
 	const { info, gradients } = colors;
 	const { cardContent } = gradients;
 
 	return (
-		<Card sx={{ height: '340px' }}>
+		<Card sx={{ height: '375px' }}>
 			<VuiBox display='flex' flexDirection='column'>
 				<VuiTypography variant='lg' color='white' fontWeight='bold' mb='4px'>
-					Satisfaction Rate
+					Evaluation Rate
 				</VuiTypography>
 				<VuiTypography variant='button' color='text' fontWeight='regular' mb='20px'>
-					From all projects
+					From all Calls
 				</VuiTypography>
 				<VuiBox sx={{ alignSelf: 'center', justifySelf: 'center', zIndex: '-1' }}>
 					<VuiBox sx={{ position: 'relative', display: 'inline-flex' }}>
-						<CircularProgress variant='determinate' value={60} size={170} color='info' />
+						<CircularProgress variant='determinate' value={60} size={150} color='info' />
 						<VuiBox
 							sx={{
 								top: 0,
@@ -38,7 +39,7 @@ const SatisfactionRate = () => {
 							<VuiBox
 								sx={{
 									background: info.main,
-									transform: 'translateY(-50%)',
+									transform: 'translateY(-5%)',
 									width: '50px',
 									height: '50px',
 									borderRadius: '50%',
@@ -52,6 +53,7 @@ const SatisfactionRate = () => {
 					</VuiBox>
 				</VuiBox>
 				<VuiBox
+				 mt={10}
 					sx={({ breakpoints }) => ({
 						width: '90%',
 						padding: '18px 22px',
@@ -73,12 +75,12 @@ const SatisfactionRate = () => {
 						display='flex'
 						justifyContent='center'
 						alignItems='center'
-						sx={{ minWidth: '80px' }}>
+						sx={{ minWidth: '50px'}}>
 						<VuiTypography color='white' variant='h3'>
 							95%
 						</VuiTypography>
 						<VuiTypography color='text' variant='caption' fontWeight='regular'>
-							Based on likes
+							Based on responses
 						</VuiTypography>
 					</VuiBox>
 					<VuiTypography color='text' variant='caption' display='inline-block' fontWeight='regular'>

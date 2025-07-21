@@ -221,9 +221,15 @@ function CallLogIndex() {
 
   // Main layout (loader only inside the Card)
   return (
-    <div style={{ height: "100vh" }}>
+    <div>
       <DashboardLayout>
         <DashboardNavbar />
+        <VuiBox
+                mt={4}
+      sx={{
+      height: '100vh',
+      alignItems: 'flex-start',
+    }}>
         <VuiBox py={3}>
           <Card>
             <VuiBox
@@ -239,17 +245,17 @@ function CallLogIndex() {
             </VuiBox>
             <VuiBox px={3} pb={3}>
               {loading ? (
-                <VuiBox
+                  <VuiBox
                   display="flex"
                   alignItems="center"
                   justifyContent="center"
                   minHeight="250px"
                   width="100%"
                 >
-                  <CircularProgress size={50} thickness={5} color="inherit" />
+              <CircularProgress size={50} thickness={5} color="inherit" />
                 </VuiBox>
               ) : (
-                <TableContainer>
+                <TableContainer sx={{ maxHeight: 480 }}>
                   <MuiTable>
                     <VuiBox component="thead">
                       <TableRow>{renderColumns}</TableRow>
@@ -260,6 +266,7 @@ function CallLogIndex() {
               )}
             </VuiBox>
           </Card>
+        </VuiBox>
         </VuiBox>
       </DashboardLayout>
     </div>

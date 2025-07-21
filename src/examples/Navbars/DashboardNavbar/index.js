@@ -148,44 +148,11 @@ function DashboardNavbar({ absolute, light, isMini }) {
 
   return (
     <AppBar
-      position={absolute ? "absolute" : navbarType}
-      color="inherit"
-      sx={(theme) => navbar(theme, { transparentNavbar, absolute, light })}
     >
       <Toolbar sx={(theme) => navbarContainer(theme)}>
-        <VuiBox
-          color="inherit"
-          mb={{ xs: 1, md: 0 }}
-          sx={(theme) => navbarRow(theme, { isMini })}
-        >
-          <style>{`
-    .breadcrumbs span {
-      display: none;
-    }
-  `}</style>
-          <Breadcrumbs icon="home" title={""} route={[]} light={light} />
-        </VuiBox>
         {isMini ? null : (
           <VuiBox sx={(theme) => navbarRow(theme, { isMini })}>
             <VuiBox color={light ? "white" : "inherit"}>
-              <Link to="/authentication/sign-in">
-                <IconButton sx={navbarIconButton} size="small">
-                  <Icon
-                    sx={({ palette: { dark, white } }) => ({
-                      color: light ? white.main : dark.main,
-                    })}
-                  >
-                    account_circle
-                  </Icon>
-                  <VuiTypography
-                    variant="button"
-                    fontWeight="medium"
-                    color={light ? "white" : "dark"}
-                  >
-                    Sign Out
-                  </VuiTypography>
-                </IconButton>
-              </Link>
               <IconButton
                 size="small"
                 color="inherit"
@@ -205,14 +172,12 @@ function DashboardNavbar({ absolute, light, isMini }) {
   );
 }
 
-// Setting default values for the props of DashboardNavbar
 DashboardNavbar.defaultProps = {
   absolute: false,
   light: false,
   isMini: false,
 };
 
-// Typechecking props for the DashboardNavbar
 DashboardNavbar.propTypes = {
   absolute: PropTypes.bool,
   light: PropTypes.bool,

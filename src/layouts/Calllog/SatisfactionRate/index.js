@@ -78,7 +78,7 @@ const SatisfactionRate = ({ successEvaluation }) => {
             mx: 'auto',
             borderRadius: '20px',
             background: linearGradient(cardContent.main, cardContent.state, cardContent.deg),
-			mt: 3, 
+			      mt: 3, 
           })}>
           <VuiTypography color='text' variant='caption' display='inline-block' fontWeight='regular'>
             0%

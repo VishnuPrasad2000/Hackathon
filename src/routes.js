@@ -3,24 +3,24 @@ import PhoneNumberIndex from "layouts/Phone_Number";
 import Assistant from "layouts/billing";
 import Profile from "layouts/profile";
 import SignIn from "layouts/authentication/sign-in";
-import CallLogIndex from "layouts/Calllog";
+import CallLogIndex from "layouts/calllog";
 import { IoIosDocument } from "react-icons/io";
 import { BsFillPersonFill } from "react-icons/bs";
 import { BsCreditCardFill } from "react-icons/bs";
 import { IoStatsChart } from "react-icons/io5";
 import { IoHome, IoMegaphone } from "react-icons/io5";
-import callDetails from "layouts/Calllog/callDetails";
+import callDetails from "layouts/calllog/callDetails";
 
 const routes = [
-  // {
-  //   type: "collapse",
-  //   name: "Dashboard",
-  //   key: "dashboard",
-  //   route: "/dashboard",
-  //   icon: <IoHome size="15px" color="inherit" />,
-  //   component: Dashboard,
-  //   noCollapse: true,
-  // },
+  {
+    type: "collapse",
+    name: "Dashboard",
+    key: "dashboard",
+    route: "/dashboard",
+    icon: <IoHome size="15px" color="inherit" />,
+    component: Dashboard,
+    noCollapse: true,
+  },
   {
     type: "collapse",
     name: "Profile",
@@ -32,8 +32,8 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Call Log",
-    key: "Call Log",
+    name: "Call History",
+    key: "calllog",
     route: "/calllog",
     icon: <IoMegaphone size="15px" color="inherit" />,
     component: CallLogIndex,

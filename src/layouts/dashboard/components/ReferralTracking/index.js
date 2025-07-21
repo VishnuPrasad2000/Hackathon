@@ -25,7 +25,7 @@ function ReferralTracking() {
 					sx={{ width: '100%' }}
 					mb='40px'>
 					<VuiTypography variant='lg' color='white' mr='auto' fontWeight='bold'>
-						Referral Tracking
+						Interaction Tracking
 					</VuiTypography>
 					<VuiBox
 						display='flex'
@@ -83,7 +83,7 @@ function ReferralTracking() {
 								}
 							})}>
 							<VuiTypography color='text' variant='button' fontWeight='regular' mb='5px'>
-								Invited
+								Called
 							</VuiTypography>
 							<VuiTypography color='white' variant='lg' fontWeight='bold'>
 								145 people

@@ -8,9 +8,9 @@ import VuiButton from "components/VuiButton";
 import VuiTypography from "components/VuiTypography";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import WelcomeMark from "layouts/Calllog/WelcomeMark";
+import WelcomeMark from "layouts/calllog/WelcomeMark";
 import Projects from "layouts/dashboard/components/Projects";
-import SatisfactionRate from "layouts/Calllog/SatisfactionRate";
+import SatisfactionRate from "layouts/calllog/SatisfactionRate";
 import { BEARER_TOKEN } from "config";
 
 function CallDetails() {
@@ -35,7 +35,6 @@ function CallDetails() {
         setCall(data);
         setLoading(false);
         setError("");
-        // Fetch assistant name after getting the call details
         if (data && data.assistantId) {
           fetch("https://api.vapi.ai/assistant", {
             method: "GET",
